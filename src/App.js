@@ -19,14 +19,20 @@ import { ChakraProvider } from "@chakra-ui/react";
 function ReWriter() {
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [choice, setChoice] = useState("Sentence");
+  const [mainChoice, setMainChoice] = useState("Come up with an idea");
+  const [choice, setChoice] = useState("long");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    let instruction = `Please provide ${
-      choice === "Sentence" ? "5" : "3"
-    } paraphrases of the ${choice.toLowerCase()}: "${text}".`;
+    let instruction = "";
+    if (mainChoice === "Come up with an idea") {
+      instruction = `Generate a ${choice} idea about: "${text}".`;
+    } else {
+      instruction = `Please provide ${
+        choice === "Sentence" ? "5" : "3"
+      } paraphrases of the ${choice.toLowerCase()}: "${text}".`;
+    }
 
     try {
       const response = await fetch(
@@ -61,8 +67,12 @@ function ReWriter() {
 
       const data = await response.json();
       const suggestionText = data.choices[0].message.content.trim();
-      const suggestionList = suggestionText.split("\n");
-      setSuggestions(suggestionList);
+      if (mainChoice === "Come up with an idea") {
+        setSuggestions([suggestionText]);
+      } else {
+        const suggestionList = suggestionText.split("\n");
+        setSuggestions(suggestionList);
+      }
       setIsLoading(false);
     } catch (error) {
       console.error(error);
@@ -75,26 +85,73 @@ function ReWriter() {
       <AppContainer>
         <Box textAlign="center" py={10} color="white">
           <FancyHeading mb={7}>Write perfect with AI</FancyHeading>
-          <Menu>
-            <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
-              Rewrite my {choice}
-            </MenuButton>
-            <MenuList>
-              <MenuItem onClick={() => setChoice("Sentence")} color="black">
-                Sentence
-              </MenuItem>
-              <MenuItem onClick={() => setChoice("Paragraph")} color="black">
-                Paragraph
-              </MenuItem>
-            </MenuList>
-          </Menu>
+          <MobileFriendlyContainer>
+            <Menu>
+              <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
+                {mainChoice}
+              </MenuButton>
+              <MenuList>
+                <MenuItem
+                  color="black"
+                  onClick={() => setMainChoice("Come up with an idea")}
+                >
+                  Come up with an idea
+                </MenuItem>
+                <MenuItem
+                  color="black"
+                  onClick={() => setMainChoice("Rewrite what you have got")}
+                >
+                  Rewrite what you have got
+                </MenuItem>
+              </MenuList>
+            </Menu>
+            {mainChoice === "Come up with an idea" ? (
+              <Menu>
+                <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
+                  Idea size: {choice}
+                </MenuButton>
+                <MenuList>
+                  <MenuItem color="black" onClick={() => setChoice("long")}>
+                    Long
+                  </MenuItem>
+                  <MenuItem color="black" onClick={() => setChoice("medium")}>
+                    Medium
+                  </MenuItem>
+                  <MenuItem color="black" onClick={() => setChoice("short")}>
+                    Short
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            ) : (
+              <Menu>
+                <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
+                  Rewrite: {choice}
+                </MenuButton>
+                <MenuList>
+                  <MenuItem color="black" onClick={() => setChoice("Sentence")}>
+                    Sentence
+                  </MenuItem>
+                  <MenuItem
+                    color="black"
+                    onClick={() => setChoice("Paragraph")}
+                  >
+                    Paragraph
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            )}
+          </MobileFriendlyContainer>
           <Box my={4}>
             <Textarea
               bg="white"
               color="black"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder={`Enter a ${choice.toLowerCase()} to paraphrase`}
+              placeholder={
+                mainChoice === "Come up with an idea"
+                  ? "Just simply write a small idea of what you want to write"
+                  : `Enter a ${choice.toLowerCase()} to paraphrase`
+              }
               size="lg"
             />
             <Button
@@ -106,18 +163,14 @@ function ReWriter() {
               Get Suggestions
             </Button>
           </Box>
-          {suggestions.length > 0 && (
-            <Box>
-              {isLoading ? (
-                <SkeletonText mt="4" noOfLines={4} spacing="4" />
-              ) : (
-                suggestions.map((suggestion, index) => (
-                  <Box key={index} my={2} p={2} shadow="md" borderWidth="3px">
-                    {suggestion}
-                  </Box>
-                ))
-              )}
-            </Box>
+          {isLoading ? (
+            <SkeletonText mt="4" noOfLines={4} spacing="4" />
+          ) : (
+            suggestions.map((suggestion, index) => (
+              <Box key={index} my={2} p={2} shadow="md" borderWidth="3px">
+                {suggestion}
+              </Box>
+            ))
           )}
         </Box>
       </AppContainer>
@@ -155,6 +208,13 @@ const FancyHeading = styled(Heading)`
       transform: scale(1);
     }
   }
+`;
+
+const MobileFriendlyContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Add space between menu items */
+  align-items: center; /* Center align the menus */
 `;
 
 export default ReWriter;
