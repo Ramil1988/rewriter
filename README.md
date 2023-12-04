@@ -1,3 +1,3 @@
-## ReWritter app 
+## Personal AI
 
-ReWritter can help you write better
+Personal will be always in your pocket

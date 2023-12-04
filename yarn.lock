@@ -1368,6 +1368,13 @@
   dependencies:
     "@chakra-ui/shared-utils" "2.0.5"
 
+"@chakra-ui/icons@^2.1.1":
+  "integrity" "sha512-3p30hdo4LlRZTT5CwoAJq3G9fHI0wDc0pBaMHj4SUn0yomO+RcDRlzhdXqdr5cVnzax44sqXJVnf3oQG0eI+4g=="
+  "resolved" "https://registry.npmjs.org/@chakra-ui/icons/-/icons-2.1.1.tgz"
+  "version" "2.1.1"
+  dependencies:
+    "@chakra-ui/icon" "3.2.0"
+
 "@chakra-ui/image@2.1.0":
   "integrity" "sha512-bskumBYKLiLMySIWDGcz0+D9Th0jPvmX6xnRMs4o92tT3Od/bW26lahmV2a2Op2ItXeCmRMY+XxJH5Gy1i46VA=="
   "resolved" "https://registry.npmjs.org/@chakra-ui/image/-/image-2.1.0.tgz"
@@ -6179,10 +6186,10 @@
   "resolved" "https://registry.npmjs.org/fraction.js/-/fraction.js-4.3.7.tgz"
   "version" "4.3.7"
 
-"framer-motion@^10.16.9", "framer-motion@>=4.0.0":
-  "integrity" "sha512-tcLz4X7PplYu6f4KHmclZFhHe8bFhCqfIG0z0Ssb+xi6OTfYeAb8BuVD235PMvypwi232VQ68KYlu3pfMKwPzA=="
-  "resolved" "https://registry.npmjs.org/framer-motion/-/framer-motion-10.16.9.tgz"
-  "version" "10.16.9"
+"framer-motion@^10.16.12", "framer-motion@>=4.0.0":
+  "integrity" "sha512-w7Yzx0OzQ5Uh6uNkxaX+4TuAPuOKz3haSbjmHpdrqDpGuCJCpq6YP9Dy7JJWdZ6mJjndrg3Ao3vUwDajKNikCA=="
+  "resolved" "https://registry.npmjs.org/framer-motion/-/framer-motion-10.16.12.tgz"
+  "version" "10.16.12"
   dependencies:
     "tslib" "^2.4.0"
   optionalDependencies:

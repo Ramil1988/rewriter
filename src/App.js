@@ -1,10 +1,9 @@
-import { useState } from "react";
-import { styled, keyframes } from "styled-components";
+import React, { useState } from "react";
 import { OPENAI_API_KEY } from "./config.local";
+import styled from "styled-components";
 import {
   Heading,
   Button,
-  Input,
   Box,
   Menu,
   MenuButton,
@@ -12,27 +11,26 @@ import {
   MenuItem,
   Textarea,
   SkeletonText,
+  CloseButton,
+  useClipboard,
 } from "@chakra-ui/react";
 import { FaChevronCircleDown } from "react-icons/fa";
 import { ChakraProvider } from "@chakra-ui/react";
 
-function ReWriter() {
+function RewRitter() {
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [mainChoice, setMainChoice] = useState("Come up with an idea");
-  const [choice, setChoice] = useState("long");
   const [isLoading, setIsLoading] = useState(false);
+  const [numSuggestions, setNumSuggestions] = useState(1);
+  const { hasCopied, onCopy } = useClipboard(suggestions.join("\n"));
+
+  const handleInputChange = (e) => {
+    setText(e.target.value);
+  };
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    let instruction = "";
-    if (mainChoice === "Come up with an idea") {
-      instruction = `Generate a ${choice} idea about: "${text}".`;
-    } else {
-      instruction = `Please provide ${
-        choice === "Sentence" ? "5" : "3"
-      } paraphrases of the ${choice.toLowerCase()}: "${text}".`;
-    }
+    let instruction = `Please provide ${numSuggestions} separate ideas for: ${text}`;
 
     try {
       const response = await fetch(
@@ -66,13 +64,17 @@ function ReWriter() {
       }
 
       const data = await response.json();
-      const suggestionText = data.choices[0].message.content.trim();
-      if (mainChoice === "Come up with an idea") {
-        setSuggestions([suggestionText]);
-      } else {
-        const suggestionList = suggestionText.split("\n");
-        setSuggestions(suggestionList);
-      }
+      const rawSuggestions = data.choices[0].message.content.split("\n");
+      const filteredSuggestions = rawSuggestions.filter(
+        (suggestion) => suggestion.trim() !== ""
+      );
+
+      const processedSuggestions = filteredSuggestions.map((suggestion) =>
+        suggestion.replace(/^\d+\.\s*/, "").replace(/^"|"$/g, "")
+      );
+
+      setSuggestions(processedSuggestions.slice(0, numSuggestions));
+
       setIsLoading(false);
     } catch (error) {
       console.error(error);
@@ -82,103 +84,66 @@ function ReWriter() {
 
   return (
     <ChakraProvider>
-      <AppContainer>
-        <Box textAlign="center" py={10} color="white">
-          <FancyHeading mb={7}>Write perfect with AI</FancyHeading>
-          <MobileFriendlyContainer>
+      <OuterContainer>
+        <AppContainer>
+          <Box textAlign="center" py={10} color="white">
+            <FancyHeading mb={7}>Your personal AI</FancyHeading>
             <Menu>
               <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
-                {mainChoice}
+                Number of Suggestions: {numSuggestions}
               </MenuButton>
               <MenuList>
-                <MenuItem
-                  color="black"
-                  onClick={() => setMainChoice("Come up with an idea")}
-                >
-                  Come up with an idea
-                </MenuItem>
-                <MenuItem
-                  color="black"
-                  onClick={() => setMainChoice("Rewrite what you have got")}
-                >
-                  Rewrite what you have got
-                </MenuItem>
+                {[1, 2, 3].map((number) => (
+                  <MenuItem
+                    key={number}
+                    color="black"
+                    onClick={() => setNumSuggestions(number)}
+                  >
+                    {number}
+                  </MenuItem>
+                ))}
               </MenuList>
             </Menu>
-            {mainChoice === "Come up with an idea" ? (
-              <Menu>
-                <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
-                  Idea size: {choice}
-                </MenuButton>
-                <MenuList>
-                  <MenuItem color="black" onClick={() => setChoice("long")}>
-                    Long
-                  </MenuItem>
-                  <MenuItem color="black" onClick={() => setChoice("medium")}>
-                    Medium
-                  </MenuItem>
-                  <MenuItem color="black" onClick={() => setChoice("short")}>
-                    Short
-                  </MenuItem>
-                </MenuList>
-              </Menu>
+            <Box my={4}>
+              <Textarea
+                bg="white"
+                color="black"
+                value={text}
+                onChange={handleInputChange}
+                placeholder="Enter your text"
+                size="lg"
+              />
+              <Button
+                colorScheme="blue"
+                my={5}
+                onClick={handleSubmit}
+                isDisabled={!text}
+              >
+                Get back from AI
+              </Button>
+            </Box>
+
+            {isLoading ? (
+              <SkeletonText mt="4" noOfLines={4} spacing="4" />
             ) : (
-              <Menu>
-                <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
-                  Rewrite: {choice}
-                </MenuButton>
-                <MenuList>
-                  <MenuItem color="black" onClick={() => setChoice("Sentence")}>
-                    Sentence
-                  </MenuItem>
-                  <MenuItem
-                    color="black"
-                    onClick={() => setChoice("Paragraph")}
-                  >
-                    Paragraph
-                  </MenuItem>
-                </MenuList>
-              </Menu>
+              suggestions.map((suggestion, index) => (
+                <SuggestionBox key={index}>
+                  {suggestion}
+                  <Button onClick={onCopy} colorScheme="blue" size="sm" m={2}>
+                    {hasCopied ? "Copied" : "Copy"}
+                  </Button>
+                  <StyledCloseButton onClick={() => setSuggestions([])} />
+                </SuggestionBox>
+              ))
             )}
-          </MobileFriendlyContainer>
-          <Box my={4}>
-            <Textarea
-              bg="white"
-              color="black"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={
-                mainChoice === "Come up with an idea"
-                  ? "Just simply write a small idea of what you want to write"
-                  : `Enter a ${choice.toLowerCase()} to paraphrase`
-              }
-              size="lg"
-            />
-            <Button
-              colorScheme="blue"
-              my={5}
-              onClick={handleSubmit}
-              isDisabled={!text}
-            >
-              Get Suggestions
-            </Button>
           </Box>
-          {isLoading ? (
-            <SkeletonText mt="4" noOfLines={4} spacing="4" />
-          ) : (
-            suggestions.map((suggestion, index) => (
-              <Box key={index} my={2} p={2} shadow="md" borderWidth="3px">
-                {suggestion}
-              </Box>
-            ))
-          )}
-        </Box>
-      </AppContainer>
+        </AppContainer>
+      </OuterContainer>
     </ChakraProvider>
   );
 }
 
-const AppContainer = styled.div`
+const OuterContainer = styled.div`
   min-height: 100vh;
   width: 100vw;
   display: flex;
@@ -188,6 +153,14 @@ const AppContainer = styled.div`
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;
+  text-align: center;
+`;
+
+const AppContainer = styled.div`
+  width: 50vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 `;
 
@@ -203,18 +176,30 @@ const FancyHeading = styled(Heading)`
     }
     50% {
       transform: scale(1.2);
-    } /* Slightly larger */
+    }
     100% {
       transform: scale(1);
     }
   }
 `;
 
-const MobileFriendlyContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px; /* Add space between menu items */
-  align-items: center; /* Center align the menus */
+const SuggestionBox = styled(Box)`
+  width: 80%;
+  margin: 2rem auto;
+  padding: 1rem;
+  padding-right: 3rem;
+  background-color: #f7fafc;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  position: relative;
+  color: black;
+  overflow: hidden;
 `;
 
-export default ReWriter;
+const StyledCloseButton = styled(CloseButton)`
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+`;
+
+export default RewRitter;
