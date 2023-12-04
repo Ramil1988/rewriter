@@ -13,6 +13,7 @@ import {
   SkeletonText,
   CloseButton,
   useClipboard,
+  Flex
 } from "@chakra-ui/react";
 import { FaChevronCircleDown } from "react-icons/fa";
 import { ChakraProvider } from "@chakra-ui/react";
@@ -30,7 +31,7 @@ function RewRitter() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    let instruction = `Please provide ${numSuggestions} separate ideas for: ${text}`;
+    let instruction = `Please provide ${numSuggestions} separate suggestions for rewriting the following text: ${text}`;
 
     try {
       const response = await fetch(
@@ -82,12 +83,20 @@ function RewRitter() {
     }
   };
 
+  const removeSuggestion = (indexToRemove) => {
+    setSuggestions(suggestions.filter((_, index) => index !== indexToRemove));
+  };
+
+  const clearText = () => {
+    setText(""); 
+  };
+
   return (
     <ChakraProvider>
       <OuterContainer>
         <AppContainer>
           <Box textAlign="center" py={10} color="white">
-            <FancyHeading mb={7}>Your personal AI</FancyHeading>
+            <FancyHeading mb={7}>Rewrite perfect with AI</FancyHeading>
             <Menu>
               <MenuButton as={Button} rightIcon={<FaChevronCircleDown />}>
                 Number of Suggestions: {numSuggestions}
@@ -105,24 +114,33 @@ function RewRitter() {
               </MenuList>
             </Menu>
             <Box my={4}>
-              <Textarea
-                bg="white"
-                color="black"
-                value={text}
-                onChange={handleInputChange}
-                placeholder="Enter your text"
-                size="lg"
-              />
-              <Button
-                colorScheme="blue"
-                my={5}
-                onClick={handleSubmit}
-                isDisabled={!text}
-              >
-                Get back from AI
-              </Button>
-            </Box>
-
+  <Flex flexDirection="column" alignItems="flex-end">
+    <Textarea
+      bg="white"
+      color="black"
+      value={text}
+      onChange={handleInputChange}
+      placeholder="Enter your text"
+      size="lg"
+    />
+    <Button
+      colorScheme="red"
+      size="sm"
+      mt={2}
+      onClick={clearText}
+    >
+      Clear Text
+    </Button>
+  </Flex>
+  <Button
+    colorScheme="blue"
+    my={5}
+    onClick={handleSubmit}
+    isDisabled={!text}
+  >
+    Get back from AI
+  </Button>
+</Box>
             {isLoading ? (
               <SkeletonText mt="4" noOfLines={4} spacing="4" />
             ) : (
@@ -132,7 +150,7 @@ function RewRitter() {
                   <Button onClick={onCopy} colorScheme="blue" size="sm" m={2}>
                     {hasCopied ? "Copied" : "Copy"}
                   </Button>
-                  <StyledCloseButton onClick={() => setSuggestions([])} />
+                  <StyledCloseButton onClick={() => removeSuggestion(index)} />
                 </SuggestionBox>
               ))
             )}
