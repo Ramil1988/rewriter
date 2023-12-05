@@ -11,7 +11,6 @@ import {
   MenuItem,
   Textarea,
   SkeletonText,
-  CloseButton,
   useClipboard,
   Flex,
 } from "@chakra-ui/react";
@@ -35,7 +34,7 @@ function RewRitter() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    setErrorHighlights(""); 
+    setErrorHighlights("");
     let instruction = `Please provide ${numSuggestions} separate suggestions for rewriting the following text: "${text}"`;
 
     try {
@@ -126,7 +125,10 @@ function RewRitter() {
       }
 
       const data = await response.json();
-      const correctedText = data.choices[0].message.content.replace(/^"|"$/g, "") // Remove leading and trailing quotes;
+      const correctedText = data.choices[0].message.content.replace(
+        /^"|"$/g,
+        ""
+      ); // Remove leading and trailing quotes;
       const highlightedHtml = applyDiff(text, correctedText);
       setHighlightedText(highlightedHtml);
 
@@ -188,8 +190,8 @@ function RewRitter() {
       <OuterContainer>
         <AppContainer>
           <Box textAlign="center" py={10} color="white">
-            <FancyHeading mb={7}>Write Perfect with AI</FancyHeading>
-            <Flex direction="column" mb={4}>
+            <FancyHeading mb={7}>Write perfectly with AI</FancyHeading>
+            <FlexWrapContainer direction="column" mb={4}>
               <Textarea
                 bg="white"
                 color="black"
@@ -203,85 +205,92 @@ function RewRitter() {
                 size="sm"
                 alignSelf="flex-end"
                 mt={2}
-                onClick={clearText}
-              >
+                onClick={clearText}>
                 Clear
               </Button>
-            </Flex>
-            <Flex justifyContent="space-between" alignItems="center" mb={4}>
-              <Flex alignItems="center">
-                <Button
-                  colorScheme="blue"
-                  ml={4}
-                  onClick={handleSubmit}
-                  isDisabled={!text}
-                >
-                  Rewrite Text times:
-                </Button>
-                <Menu>
-                  <MenuButton
-                    ml={1}
-                    as={Button}
-                    rightIcon={<FaChevronCircleDown />}
-                  >
-                    {numSuggestions}
-                  </MenuButton>
-                  <MenuList>
-                    {[1, 2, 3].map((number) => (
-                      <MenuItem
-                        key={number}
-                        color="black"
-                        onClick={() => setNumSuggestions(number)}
-                      >
-                        {number}
-                      </MenuItem>
-                    ))}
-                  </MenuList>
-                </Menu>
-                <Button
-                  colorScheme="green"
-                  ml={4}
-                  onClick={handleCheckErrors}
-                  isDisabled={!text}
-                >
-                  Check Errors
-                </Button>
-              </Flex>
-            </Flex>
+            </FlexWrapContainer>
+            <FlexWrapContainer>
+              <Button
+                colorScheme="blue"
+                onClick={handleSubmit}
+                isDisabled={!text}>
+                Rewrite Text times:
+              </Button>
+              <Menu>
+                <MenuButton
+                  ml={1}
+                  as={Button}
+                  rightIcon={<FaChevronCircleDown />}>
+                  {numSuggestions}
+                </MenuButton>
+                <MenuList>
+                  {[1, 2, 3].map((number) => (
+                    <MenuItem
+                      key={number}
+                      color="black"
+                      onClick={() => setNumSuggestions(number)}>
+                      {number}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
+              <Button
+                colorScheme="green"
+                ml={4}
+                onClick={handleCheckErrors}
+                isDisabled={!text}>
+                Check Errors
+              </Button>
+            </FlexWrapContainer>
             {isLoading ? (
               <SkeletonText mt="4" noOfLines={4} spacing="4" />
             ) : (
-              <Box>
+              <>
                 {highlightedText && (
                   <HighlightedText>
                     <div
                       dangerouslySetInnerHTML={{ __html: highlightedText }}
                     />
-                       <CopyButton
+                    <ButtonContainer>
+                      <CopyButton
                         onClick={copyTextContent}
                         colorScheme="blue"
-                        size="sm"
-                        m={2}
-                    >
-                      {hasCopiedText ? "Copied" : "Copy Text"}
-                    </CopyButton>
-                    <StyledCloseButton onClick={() => setHighlightedText("")} />
+                        size="xs">
+                        {hasCopiedText ? "Copied" : "Copy"}
+                      </CopyButton>
+                      <Button
+                          colorScheme="red"
+                          size="xs"
+                          alignSelf="flex-end"
+                          mt={2}
+                          onClick={() => setHighlightedText("")}>
+                          Delete </Button>
+                    </ButtonContainer>
                   </HighlightedText>
                 )}
-                 <FlexWrapContainer>
-                {suggestions.map((suggestion, index) => (
-                  <SuggestionBox key={index}>
-                    {suggestion}
-                    <CopyButton onClick={onCopy} colorScheme="blue" size="sm" m={2}>
-                      {hasCopied ? "Copied" : "Copy"}
-                    </CopyButton>
-                    <StyledCloseButton
-                      onClick={() => removeSuggestion(index)}
-                    />
-                  </SuggestionBox>
-                ))}
+                <FlexWrapContainer>
+                  {suggestions.map((suggestion, index) => (
+                    <SuggestionBox key={index}>
+                      {suggestion}
+                      <ButtonContainer>
+                        <CopyButton
+                          onClick={() => onCopy(suggestion)}
+                          colorScheme="blue"
+                          size="xs">
+                          {hasCopied ? "Copied" : "Copy"}
+                        </CopyButton>
+                        <Button
+                          colorScheme="red"
+                          size="xs"
+                          alignSelf="flex-end"
+                          mt={2}
+                          onClick={() => removeSuggestion(index)}>
+                          Delete </Button>
+                      </ButtonContainer>
+                    </SuggestionBox>
+                  ))}
                 </FlexWrapContainer>
-              </Box>
+              </>
             )}
           </Box>
         </AppContainer>
@@ -291,20 +300,22 @@ function RewRitter() {
 }
 
 const OuterContainer = styled.div`
-  min-height: 100vh;
   width: 100vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  height: 100vh;
+  overflow-y: auto;
   background-image: url("./rewriter.png");
   background-size: cover;
   background-position: center center;
-  background-attachment: fixed;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const AppContainer = styled.div`
-  width: 70vw;
+  overflow: --x; // Allows vertical scrolling within this container
+  width: 100%;
+  margin: 20px;
+  height: 100%; 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -314,7 +325,11 @@ const AppContainer = styled.div`
 const FlexWrapContainer = styled(Flex)`
   flex-wrap: wrap;
   justify-content: center;
-  gap: 5px
+  gap: 5px;
+  @media (max-width: 768px) {
+    gap: 5px;
+    width: 85vw;
+  }
 `;
 
 const FancyHeading = styled(Heading)`
@@ -337,23 +352,15 @@ const FancyHeading = styled(Heading)`
 `;
 
 const SuggestionBox = styled(Box)`
-  flex: calc(33%); 
+  flex: calc(33% - 1rem);
   margin: 0.5rem auto;
   padding: 1rem;
-  padding-right: 3rem;
   background-color: #f7fafc;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
-  position: relative;
   color: black;
   overflow: hidden;
   white-space: pre-wrap;
-`;
-
-const StyledCloseButton = styled(CloseButton)`
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
 `;
 
 const HighlightedText = styled.div`
@@ -366,7 +373,6 @@ const HighlightedText = styled.div`
   background-color: #f7fafc;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
-  position: relative;
   color: black;
   overflow: hidden;
   white-space: pre-wrap;
@@ -379,9 +385,25 @@ const HighlightedText = styled.div`
   }
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  @media (max-width: 768px) {
+   
+    right: 5px;
+    top: 5px;
+    size: 'xs'; 
+  }
+`;
+
 const CopyButton = styled(Button)`
-  position: absolute;
-  margin: 20px;
+  align-self: flex-end;
+  @media (max-width: 768px) {
+    flex-direction: column; 
+    align-items: flex-end;
+  }
 `;
 
 export default RewRitter;
