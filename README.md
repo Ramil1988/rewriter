@@ -1,3 +1,3 @@
-## Personal AI
+## Rewritter App
 
-Personal will be always in your pocket
+Write perfect with AI

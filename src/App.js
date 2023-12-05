@@ -35,8 +35,7 @@ function RewRitter() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    setErrorHighlights(""); // Clear error highlights
-
+    setErrorHighlights(""); 
     let instruction = `Please provide ${numSuggestions} separate suggestions for rewriting the following text: "${text}"`;
 
     try {
@@ -93,7 +92,7 @@ function RewRitter() {
     setIsLoading(true);
     setSuggestions([]);
 
-    let instruction = `Please rewrite the following text with corrections: "${text}"`;
+    let instruction = `Please rewrite the following text with corrections if it has mistakes: "${text}". .`;
 
     try {
       const response = await fetch(
@@ -127,7 +126,7 @@ function RewRitter() {
       }
 
       const data = await response.json();
-      const correctedText = data.choices[0].message.content;
+      const correctedText = data.choices[0].message.content.replace(/^"|"$/g, "") // Remove leading and trailing quotes;
       const highlightedHtml = applyDiff(text, correctedText);
       setHighlightedText(highlightedHtml);
 
@@ -258,28 +257,30 @@ function RewRitter() {
                     <div
                       dangerouslySetInnerHTML={{ __html: highlightedText }}
                     />
-                    <Button
-                      onClick={copyTextContent}
-                      colorScheme="blue"
-                      size="sm"
-                      m={2}
+                       <CopyButton
+                        onClick={copyTextContent}
+                        colorScheme="blue"
+                        size="sm"
+                        m={2}
                     >
                       {hasCopiedText ? "Copied" : "Copy Text"}
-                    </Button>
+                    </CopyButton>
                     <StyledCloseButton onClick={() => setHighlightedText("")} />
                   </HighlightedText>
                 )}
+                 <FlexWrapContainer>
                 {suggestions.map((suggestion, index) => (
                   <SuggestionBox key={index}>
                     {suggestion}
-                    <Button onClick={onCopy} colorScheme="blue" size="sm" m={2}>
+                    <CopyButton onClick={onCopy} colorScheme="blue" size="sm" m={2}>
                       {hasCopied ? "Copied" : "Copy"}
-                    </Button>
+                    </CopyButton>
                     <StyledCloseButton
                       onClick={() => removeSuggestion(index)}
                     />
                   </SuggestionBox>
                 ))}
+                </FlexWrapContainer>
               </Box>
             )}
           </Box>
@@ -310,6 +311,12 @@ const AppContainer = styled.div`
   text-align: center;
 `;
 
+const FlexWrapContainer = styled(Flex)`
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px
+`;
+
 const FancyHeading = styled(Heading)`
   font-size: 2.5rem;
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
@@ -330,8 +337,8 @@ const FancyHeading = styled(Heading)`
 `;
 
 const SuggestionBox = styled(Box)`
-  width: 50%;
-  margin: 2rem auto;
+  flex: calc(33%); 
+  margin: 0.5rem auto;
   padding: 1rem;
   padding-right: 3rem;
   background-color: #f7fafc;
@@ -370,6 +377,11 @@ const HighlightedText = styled.div`
     background-color: #ffcccb;
     text-decoration: line-through;
   }
+`;
+
+const CopyButton = styled(Button)`
+  position: absolute;
+  margin: 20px;
 `;
 
 export default RewRitter;
