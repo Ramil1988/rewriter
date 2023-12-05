@@ -91,7 +91,7 @@ function RewRitter() {
     setIsLoading(true);
     setSuggestions([]);
 
-    let instruction = `Please rewrite the following text with corrections if it has mistakes: "${text}". .`;
+    let instruction = `Please rewrite the following text with corrections if it has mistakes: "${text}".`;
 
     try {
       const response = await fetch(
@@ -191,7 +191,7 @@ function RewRitter() {
         <AppContainer>
           <Box textAlign="center" py={10} color="white">
             <FancyHeading mb={7}>Write perfectly with AI</FancyHeading>
-            <FlexWrapContainer direction="column" mb={4}>
+            <FlexWrapContainer direction="column" mb={1}>
               <Textarea
                 bg="white"
                 color="black"
@@ -312,9 +312,8 @@ const OuterContainer = styled.div`
 `;
 
 const AppContainer = styled.div`
-  overflow: --x; // Allows vertical scrolling within this container
-  width: 100%;
-  margin: 20px;
+  overflow: --x; 
+  margin: auto 200px;
   height: 100%; 
   display: flex;
   flex-direction: column;
@@ -324,7 +323,6 @@ const AppContainer = styled.div`
 
 const FlexWrapContainer = styled(Flex)`
   flex-wrap: wrap;
-  justify-content: center;
   gap: 5px;
   @media (max-width: 768px) {
     gap: 5px;
@@ -366,10 +364,9 @@ const SuggestionBox = styled(Box)`
 const HighlightedText = styled.div`
   background-color: white;
   color: black;
-  width: 80%;
+  width: 50%;
   margin: 2rem auto;
   padding: 1rem;
-  padding-right: 3rem;
   background-color: #f7fafc;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
@@ -382,6 +379,10 @@ const HighlightedText = styled.div`
   .removed {
     background-color: #ffcccb;
     text-decoration: line-through;
+  }
+
+  @media (max-width: 768px) {
+    width: 80vw;
   }
 `;
 
