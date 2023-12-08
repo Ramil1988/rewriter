@@ -11,7 +11,6 @@ import {
   MenuItem,
   Textarea,
   SkeletonText,
-  useClipboard,
   Flex,
 } from "@chakra-ui/react";
 import { FaChevronCircleDown } from "react-icons/fa";
@@ -24,9 +23,11 @@ function RewRitter() {
   const [errorHighlights, setErrorHighlights] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [numSuggestions, setNumSuggestions] = useState(1);
-  const { hasCopied, onCopy } = useClipboard(suggestions.join("\n"));
   const [highlightedText, setHighlightedText] = useState("");
   const [hasCopiedText, setHasCopiedText] = useState(false);
+  const [copiedStatus, setCopiedStatus] = useState(
+    new Array(suggestions.length).fill(false)
+  );
 
   const handleInputChange = (e) => {
     setText(e.target.value);
@@ -72,12 +73,9 @@ function RewRitter() {
       const rawSuggestions = data.choices[0].message.content.trim().split("\n");
       const filteredSuggestions = rawSuggestions
         .filter((suggestion) => suggestion.trim() !== "")
-        .map(
-          (suggestion) =>
-            suggestion
-              .replace(/^\d+\.\s*/, "") // Remove leading numbers and dots
-              .replace(/^"|"$/g, "") // Remove leading and trailing quotes
-        );
+        .map((suggestion) => {
+          return suggestion.replace(/^\d+\.\s*/, "").replace(/^"|"$/g, "");
+        });
 
       setSuggestions(filteredSuggestions.slice(0, numSuggestions));
       setIsLoading(false);
@@ -171,6 +169,24 @@ function RewRitter() {
     });
   };
 
+  const handleCopy = (textToCopy, index) => {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopiedStatus((prevStatus) => {
+        const newStatus = [...prevStatus];
+        newStatus[index] = true;
+        return newStatus;
+      });
+
+      setTimeout(() => {
+        setCopiedStatus((prevStatus) => {
+          const newStatus = [...prevStatus];
+          newStatus[index] = false;
+          return newStatus;
+        });
+      }, 2000);
+    });
+  };
+
   const applyDiff = (oldText, newText) => {
     const diffResult = diffWords(oldText, newText);
     return diffResult
@@ -205,7 +221,8 @@ function RewRitter() {
                 size="sm"
                 alignSelf="flex-end"
                 mt={2}
-                onClick={clearText}>
+                onClick={clearText}
+              >
                 Clear
               </Button>
             </FlexWrapContainer>
@@ -213,14 +230,16 @@ function RewRitter() {
               <Button
                 colorScheme="blue"
                 onClick={handleSubmit}
-                isDisabled={!text}>
+                isDisabled={!text}
+              >
                 Rewrite Text times:
               </Button>
               <Menu>
                 <MenuButton
                   ml={1}
                   as={Button}
-                  rightIcon={<FaChevronCircleDown />}>
+                  rightIcon={<FaChevronCircleDown />}
+                >
                   {numSuggestions}
                 </MenuButton>
                 <MenuList>
@@ -228,7 +247,8 @@ function RewRitter() {
                     <MenuItem
                       key={number}
                       color="black"
-                      onClick={() => setNumSuggestions(number)}>
+                      onClick={() => setNumSuggestions(number)}
+                    >
                       {number}
                     </MenuItem>
                   ))}
@@ -238,7 +258,8 @@ function RewRitter() {
                 colorScheme="green"
                 ml={4}
                 onClick={handleCheckErrors}
-                isDisabled={!text}>
+                isDisabled={!text}
+              >
                 Check Errors
               </Button>
             </FlexWrapContainer>
@@ -255,16 +276,19 @@ function RewRitter() {
                       <CopyButton
                         onClick={copyTextContent}
                         colorScheme="blue"
-                        size="xs">
+                        size="xs"
+                      >
                         {hasCopiedText ? "Copied" : "Copy"}
                       </CopyButton>
                       <Button
-                          colorScheme="red"
-                          size="xs"
-                          alignSelf="flex-end"
-                          mt={2}
-                          onClick={() => setHighlightedText("")}>
-                          Delete </Button>
+                        colorScheme="red"
+                        size="xs"
+                        alignSelf="flex-end"
+                        mt={2}
+                        onClick={() => setHighlightedText("")}
+                      >
+                        Delete{" "}
+                      </Button>
                     </ButtonContainer>
                   </HighlightedText>
                 )}
@@ -274,18 +298,21 @@ function RewRitter() {
                       {suggestion}
                       <ButtonContainer>
                         <CopyButton
-                          onClick={() => onCopy(suggestion)}
+                          onClick={() => handleCopy(suggestion, index)}
                           colorScheme="blue"
-                          size="xs">
-                          {hasCopied ? "Copied" : "Copy"}
+                          size="xs"
+                        >
+                          {copiedStatus[index] ? "Copied" : "Copy"}
                         </CopyButton>
                         <Button
                           colorScheme="red"
                           size="xs"
                           alignSelf="flex-end"
                           mt={2}
-                          onClick={() => removeSuggestion(index)}>
-                          Delete </Button>
+                          onClick={() => removeSuggestion(index)}
+                        >
+                          Delete{" "}
+                        </Button>
                       </ButtonContainer>
                     </SuggestionBox>
                   ))}
@@ -312,9 +339,9 @@ const OuterContainer = styled.div`
 `;
 
 const AppContainer = styled.div`
-  overflow: --x; 
+  overflow: --x;
   margin: auto 200px;
-  height: 100%; 
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -359,6 +386,10 @@ const SuggestionBox = styled(Box)`
   color: black;
   overflow: hidden;
   white-space: pre-wrap;
+
+  @media (max-width: 768px) {
+    flex: 100%;
+  }
 `;
 
 const HighlightedText = styled.div`
@@ -392,17 +423,16 @@ const ButtonContainer = styled.div`
   gap: 10px;
   margin-top: 10px;
   @media (max-width: 768px) {
-   
     right: 5px;
     top: 5px;
-    size: 'xs'; 
+    size: "xs";
   }
 `;
 
 const CopyButton = styled(Button)`
   align-self: flex-end;
   @media (max-width: 768px) {
-    flex-direction: column; 
+    flex-direction: column;
     align-items: flex-end;
   }
 `;
