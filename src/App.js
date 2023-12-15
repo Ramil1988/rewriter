@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { OPENAI_API_KEY } from "./config.local";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import {
   Heading,
   Button,
@@ -20,6 +20,7 @@ import { diffWords } from "diff";
 function RewRitter() {
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [examples, setExamples] = useState([]);
   const [errorHighlights, setErrorHighlights] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [numSuggestions, setNumSuggestions] = useState(1);
@@ -137,13 +138,71 @@ function RewRitter() {
     }
   };
 
+  const handleExamples = async () => {
+    setIsLoading(true);
+    setErrorHighlights("");
+    let instruction = `Please provide separate ${examples} for the following text: "${text}"`;
+
+    try {
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "system",
+                content: "You are a helpful assistant.",
+              },
+              {
+                role: "user",
+                content: instruction,
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const responseData = await response.json();
+        console.error("OpenAI API Error:", responseData);
+        throw new Error(`OpenAI API responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const rawExamples = data.choices[0].message.content.trim().split("\n");
+      const filteredExamples = rawExamples
+        .filter((example) => example.trim() !== "")
+        .map((example) => {
+          return example.replace(/^\d+\.\s*/, "").replace(/^"|"$/g, "");
+        });
+
+      setExamples(filteredExamples.slice(0, examples));
+      setIsLoading(false);
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+    }
+  };
+  
+
   const removeSuggestion = (indexToRemove) => {
     setSuggestions(suggestions.filter((_, index) => index !== indexToRemove));
   };
 
+  const removeExample = (indexToRemove) => {
+    setExamples(examples.filter((_, index) => index !== indexToRemove));
+  };
+
   const clearText = () => {
     setText("");
-    setSuggestions([]);
+    setSuggestions([]); 
+    setExamples([]);
     setErrorHighlights("");
   };
 
@@ -206,14 +265,14 @@ function RewRitter() {
       <OuterContainer>
         <AppContainer>
           <Box textAlign="center" py={10} color="white">
-            <FancyHeading mb={7}>Write perfectly with AI</FancyHeading>
+          <SloganText>Write perfectly with AI</SloganText>
             <FlexWrapContainer direction="column" mb={1}>
               <Textarea
                 bg="white"
                 color="black"
                 value={text}
                 onChange={handleInputChange}
-                placeholder="Enter your text"
+                placeholder="Enter your text to check/rewrite or put the word to come up with examples of using it"
                 size="lg"
               />
               <Button
@@ -226,6 +285,7 @@ function RewRitter() {
                 Clear
               </Button>
             </FlexWrapContainer>
+            <FancyHeading mb={7}>Check or rewrite my sentence</FancyHeading>
             <FlexWrapContainer>
               <Button
                 colorScheme="blue"
@@ -263,6 +323,38 @@ function RewRitter() {
                 Check Errors
               </Button>
             </FlexWrapContainer>
+            <Box textAlign="center">
+              <FancyHeadingTwo>Or provide examples</FancyHeadingTwo>
+              </Box>
+              <FlexWrapContainer>
+            <Button
+                colorScheme="blue"
+                onClick={handleExamples}
+                isDisabled={!text}
+              >
+                Provide examples times:
+              </Button>
+              <Menu>
+                <MenuButton
+                  ml={1}
+                  as={Button}
+                  rightIcon={<FaChevronCircleDown />}
+                >
+                  {examples}
+                </MenuButton>
+                <MenuList>
+                  {[1, 2, 3, 4, 5].map((number) => (
+                    <MenuItem
+                      key={number}
+                      color="black"
+                      onClick={() => setExamples(number)}
+                    >
+                      {number}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
+              </FlexWrapContainer>
             {isLoading ? (
               <SkeletonText mt="4" noOfLines={4} spacing="4" />
             ) : (
@@ -317,6 +409,31 @@ function RewRitter() {
                     </SuggestionBox>
                   ))}
                 </FlexWrapContainer>
+                <FlexWrapContainer>
+                  {examples.map((example, index) => (
+                    <SuggestionBox key={index}>
+                      {example}
+                      <ButtonContainer>
+                        <CopyButton
+                          onClick={() => handleCopy(example, index)}
+                          colorScheme="blue"
+                          size="xs"
+                        >
+                          {copiedStatus[index] ? "Copied" : "Copy"}
+                        </CopyButton>
+                        <Button
+                          colorScheme="red"
+                          size="xs"
+                          alignSelf="flex-end"
+                          mt={2}
+                          onClick={() => removeSuggestion(index)}
+                        >
+                          Delete{" "}
+                        </Button>
+                      </ButtonContainer>
+                    </SuggestionBox>
+                  ))}
+                </FlexWrapContainer>
               </>
             )}
           </Box>
@@ -325,6 +442,14 @@ function RewRitter() {
     </ChakraProvider>
   );
 }
+
+const SloganText = styled(Heading)`
+  font-size: 3rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 2.5);
+  margin-bottom: 20px;
+  display: block;
+`;
 
 const OuterContainer = styled.div`
   width: 100vw;
@@ -357,24 +482,16 @@ const FlexWrapContainer = styled(Flex)`
   }
 `;
 
-const FancyHeading = styled(Heading)`
-  font-size: 2.5rem;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+const FancyHeading = styled.h1`
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 2.5);
   margin-bottom: 20px;
-  animation: pulse 2s infinite ease-in-out;
-
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.2);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
 `;
+
+const FancyHeadingTwo = styled(FancyHeading)`
+margin-top: 20px;
+`
 
 const SuggestionBox = styled(Box)`
   flex: calc(33% - 1rem);
