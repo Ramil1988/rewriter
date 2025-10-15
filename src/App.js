@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { OPENAI_API_KEY } from "./config.local";
 import styled from "styled-components";
 import {
   Heading,
@@ -41,11 +40,10 @@ function RewRitter() {
 
     try {
       const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
+        "/.netlify/functions/openai",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -94,11 +92,10 @@ function RewRitter() {
 
     try {
       const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
+        "/.netlify/functions/openai",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
