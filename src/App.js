@@ -204,77 +204,102 @@ function RewRitter() {
     <ChakraProvider>
       <OuterContainer>
         <AppContainer>
-          <Box textAlign="center" py={10} color="white">
+          <Box textAlign="center" color="white">
             <SloganText>Write perfectly with AI</SloganText>
-            <FlexWrapContainer direction="column" mb={1}>
-              <Textarea
-                bg="white"
-                color="black"
+
+            <InputCard>
+              <StyledTextarea
                 value={text}
                 onChange={handleInputChange}
-                placeholder="Enter your text to check/rewrite it"
+                placeholder="Enter your text to check or rewrite..."
                 size="lg"
+                minH="150px"
+                resize="vertical"
+                bg="white"
+                color="#1a202c"
+                border="2px solid #E5E7EB"
+                borderRadius="12px"
+                fontSize="15px"
+                _placeholder={{ color: "#9CA3AF" }}
+                _focus={{
+                  borderColor: "#3B82F6",
+                  boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+                  outline: "none"
+                }}
               />
-              <Button
-                colorScheme="red"
-                size="sm"
-                alignSelf="flex-end"
-                mt={2}
-                onClick={clearText}
-              >
-                Clear
-              </Button>
-            </FlexWrapContainer>
-            <FlexWrapContainer>
-              <Button
-                colorScheme="blue"
-                onClick={handleSubmit}
-                isDisabled={!text}
-              >
-                Rewrite Text times:
-              </Button>
-              <Menu>
-                <MenuButton
-                  ml={1}
-                  as={Button}
-                  rightIcon={<FaChevronCircleDown />}
+
+              <ActionButtonsRow>
+                <PrimaryButton
+                  colorScheme="blue"
+                  size="lg"
+                  onClick={handleSubmit}
+                  isDisabled={!text || isLoading}
+                  leftIcon={<span>✨</span>}
                 >
-                  {numSuggestions}
-                </MenuButton>
-                <MenuList>
-                  {[1, 2, 3].map((number) => (
-                    <MenuItem
-                      key={number}
-                      color="black"
-                      onClick={() => setNumSuggestions(number)}
-                    >
-                      {number}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
-              <Button
-                colorScheme="green"
-                ml={4}
-                onClick={handleCheckErrors}
-                isDisabled={!text}
-              >
-                Check Errors
-              </Button>
-            </FlexWrapContainer>
+                  Rewrite Text
+                </PrimaryButton>
+
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    size="lg"
+                    rightIcon={<FaChevronCircleDown />}
+                    variant="outline"
+                    bg="white"
+                    _hover={{ bg: "#F9FAFB" }}
+                  >
+                    {numSuggestions} {numSuggestions === 1 ? 'version' : 'versions'}
+                  </MenuButton>
+                  <MenuList>
+                    {[1, 2, 3].map((number) => (
+                      <MenuItem
+                        key={number}
+                        onClick={() => setNumSuggestions(number)}
+                      >
+                        {number} {number === 1 ? 'version' : 'versions'}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Menu>
+
+                <SecondaryButton
+                  colorScheme="green"
+                  size="lg"
+                  onClick={handleCheckErrors}
+                  isDisabled={!text || isLoading}
+                  leftIcon={<span>✓</span>}
+                >
+                  Check Errors
+                </SecondaryButton>
+
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  colorScheme="red"
+                  onClick={clearText}
+                  isDisabled={!text}
+                >
+                  Clear
+                </Button>
+              </ActionButtonsRow>
+            </InputCard>
+
             {isLoading ? (
-              <Spinner
-                thickness="6px"
-                speed="0.65s"
-                emptyColor="gray.200"
-                color="blue.500"
-                size="xl"
-                mt="30px"
-              />
+              <LoadingContainer>
+                <Spinner
+                  thickness="4px"
+                  speed="0.65s"
+                  emptyColor="gray.200"
+                  color="blue.500"
+                  size="xl"
+                />
+                <LoadingText>Processing your text...</LoadingText>
+              </LoadingContainer>
             ) : (
               <>
                 {highlightedText && (
                   <HighlightedText>
+                    <ResultLabel>Corrected Text</ResultLabel>
                     <div
                       dangerouslySetInnerHTML={{ __html: highlightedText }}
                     />
@@ -282,47 +307,54 @@ function RewRitter() {
                       <CopyButton
                         onClick={copyTextContent}
                         colorScheme="blue"
-                        size="xs"
+                        size="sm"
                       >
-                        {hasCopiedText ? "Copied" : "Copy"}
+                        {hasCopiedText ? "✓ Copied" : "Copy"}
                       </CopyButton>
                       <Button
                         colorScheme="red"
-                        size="xs"
-                        alignSelf="flex-end"
-                        mt={2}
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setHighlightedText("")}
                       >
-                        Delete{" "}
+                        Remove
                       </Button>
                     </ButtonContainer>
                   </HighlightedText>
                 )}
-                <FlexWrapContainer>
-                  {suggestions.map((suggestion, index) => (
-                    <SuggestionBox key={index}>
-                      {suggestion}
-                      <ButtonContainer>
-                        <CopyButton
-                          onClick={() => handleCopy(suggestion, index)}
-                          colorScheme="blue"
-                          size="xs"
-                        >
-                          {copiedStatus[index] ? "Copied" : "Copy"}
-                        </CopyButton>
-                        <Button
-                          colorScheme="red"
-                          size="xs"
-                          alignSelf="flex-end"
-                          mt={2}
-                          onClick={() => removeSuggestion(index)}
-                        >
-                          Delete{" "}
-                        </Button>
-                      </ButtonContainer>
-                    </SuggestionBox>
-                  ))}
-                </FlexWrapContainer>
+
+                {suggestions.length > 0 && (
+                  <>
+                    <ResultsHeader>
+                      {suggestions.length} {suggestions.length === 1 ? 'Suggestion' : 'Suggestions'}
+                    </ResultsHeader>
+                    <FlexWrapContainer>
+                      {suggestions.map((suggestion, index) => (
+                        <SuggestionBox key={index}>
+                          <SuggestionNumber>Version {index + 1}</SuggestionNumber>
+                          <SuggestionText>{suggestion}</SuggestionText>
+                          <ButtonContainer>
+                            <CopyButton
+                              onClick={() => handleCopy(suggestion, index)}
+                              colorScheme="blue"
+                              size="sm"
+                            >
+                              {copiedStatus[index] ? "✓ Copied" : "Copy"}
+                            </CopyButton>
+                            <Button
+                              colorScheme="red"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeSuggestion(index)}
+                            >
+                              Remove
+                            </Button>
+                          </ButtonContainer>
+                        </SuggestionBox>
+                      ))}
+                    </FlexWrapContainer>
+                  </>
+                )}
               </>
             )}
           </Box>
@@ -333,16 +365,18 @@ function RewRitter() {
 }
 
 const SloganText = styled(Heading)`
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-  margin-bottom: 30px;
-  display: block;
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: 4rem;
+  font-weight: 800;
   color: white;
-  letter-spacing: 0px;
+  letter-spacing: -0.02em;
+  margin-bottom: 48px;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
+               0 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1.1;
 
   @media (max-width: 768px) {
-    font-size: 2rem;
+    font-size: 2.5rem;
+    margin-bottom: 32px;
   }
 `;
 
@@ -350,36 +384,91 @@ const OuterContainer = styled.div`
   width: 100vw;
   min-height: 100vh;
   overflow-y: auto;
-  background-image: url("./rewriter.png");
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
-  position: relative;
+  padding: 64px 24px;
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./rewriter.png");
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    z-index: 0;
+  }
+
+  &::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+
+  @media (max-width: 768px) {
+    padding: 32px 16px;
+  }
 `;
 
 const AppContainer = styled.div`
-  max-width: 1200px;
+  max-width: 1000px;
   width: 100%;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
   position: relative;
-  z-index: 1;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
-  border-radius: 24px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  animation: fadeInUp 0.6s ease-out;
+  z-index: 2;
+  animation: fadeInUp 0.5s ease-out;
 
   @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const FlexWrapContainer = styled(Flex)`
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    gap: 12px;
+  }
+`;
+
+const SuggestionBox = styled(Box)`
+  flex: 1 1 calc(50% - 16px);
+  min-width: 300px;
+  max-width: 100%;
+  padding: 24px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  color: #1a202c;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border-left: 4px solid #3B82F6;
+  transition: all 0.25s ease;
+  animation: slideInUp 0.4s ease-out backwards;
+  font-size: 15px;
+  line-height: 1.6;
+
+  @keyframes slideInUp {
     from {
       opacity: 0;
       transform: translateY(20px);
@@ -390,83 +479,39 @@ const AppContainer = styled.div`
     }
   }
 
-  @media (max-width: 768px) {
-    padding: 20px;
-    margin: 0 10px;
-  }
-`;
-
-const FlexWrapContainer = styled(Flex)`
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-
-  @media (max-width: 768px) {
-    gap: 8px;
-    width: 100%;
-  }
-`;
-
-const SuggestionBox = styled(Box)`
-  flex: calc(33% - 1rem);
-  min-width: 280px;
-  margin: 0.5rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
-  color: #2d3748;
-  overflow: hidden;
-  white-space: pre-wrap;
-  border: 1px solid rgba(200, 200, 200, 0.3);
-  transition: all 0.3s ease;
-  position: relative;
-  animation: slideIn 0.4s ease-out;
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(15px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-left-color: #2563EB;
   }
 
   @media (max-width: 768px) {
-    flex: 100%;
+    flex: 1 1 100%;
     min-width: unset;
-    margin: 0.5rem 0;
   }
 `;
 
 const HighlightedText = styled.div`
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  color: #2d3748;
-  width: 65%;
+  background: white;
+  color: #1a202c;
+  width: 100%;
   max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
-  overflow: hidden;
+  margin: 32px auto;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
   white-space: pre-wrap;
-  border: 1px solid rgba(200, 200, 200, 0.3);
-  transition: all 0.3s ease;
-  animation: slideIn 0.4s ease-out;
+  word-wrap: break-word;
+  border-left: 4px solid #10B981;
+  transition: all 0.25s ease;
+  animation: slideInUp 0.4s ease-out;
+  font-size: 15px;
+  line-height: 1.6;
 
-  @keyframes slideIn {
+  @keyframes slideInUp {
     from {
       opacity: 0;
-      transform: translateY(15px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
@@ -480,40 +525,39 @@ const HighlightedText = styled.div`
   }
 
   .added {
-    background-color: #c6f6d5;
-    padding: 2px 4px;
-    border-radius: 3px;
+    background-color: #D1FAE5;
+    color: #065F46;
+    padding: 3px 6px;
+    border-radius: 4px;
     font-weight: 600;
   }
 
   .removed {
-    background-color: #fed7d7;
+    background-color: #FEE2E2;
+    color: #991B1B;
     text-decoration: line-through;
-    padding: 2px 4px;
-    border-radius: 3px;
-    opacity: 0.8;
+    padding: 3px 6px;
+    border-radius: 4px;
   }
 
   @media (max-width: 768px) {
-    width: 95%;
-    padding: 1.5rem;
+    margin: 24px auto;
+    padding: 20px;
   }
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   margin-top: 16px;
 
   @media (max-width: 768px) {
     gap: 8px;
-    flex-wrap: wrap;
   }
 `;
 
 const CopyButton = styled(Button)`
-  align-self: flex-end;
   transition: all 0.2s ease;
 
   &:hover {
@@ -521,13 +565,105 @@ const CopyButton = styled(Button)`
   }
 
   &:active {
-    transform: translateY(0);
+    transform: scale(0.98);
   }
+`;
+
+const InputCard = styled(Box)`
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  margin-bottom: 32px;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+`;
+
+const StyledTextarea = styled(Textarea)`
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  line-height: 1.6;
+`;
+
+const ActionButtonsRow = styled(Flex)`
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
 
   @media (max-width: 768px) {
     flex-direction: column;
-    align-items: flex-end;
+    gap: 10px;
   }
+`;
+
+const PrimaryButton = styled(Button)`
+  font-weight: 600;
+  min-width: 160px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const SecondaryButton = styled(Button)`
+  font-weight: 600;
+  min-width: 160px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin: 64px 0;
+`;
+
+const LoadingText = styled.p`
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+`;
+
+const ResultsHeader = styled.h2`
+  color: white;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 32px 0 24px;
+  text-align: left;
+
+  @media (max-width: 768px) {
+    font-size: 20px;
+    margin: 24px 0 16px;
+  }
+`;
+
+const ResultLabel = styled.div`
+  font-size: 14px;
+  font-weight: 700;
+  color: #10B981;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+`;
+
+const SuggestionNumber = styled.div`
+  font-size: 12px;
+  font-weight: 700;
+  color: #3B82F6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+`;
+
+const SuggestionText = styled.div`
+  margin-bottom: 16px;
 `;
 
 export default RewRitter;
