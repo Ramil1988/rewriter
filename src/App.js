@@ -459,7 +459,8 @@ const SuggestionBox = styled(Box)`
   min-width: 300px;
   max-width: 100%;
   padding: 24px;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   color: #1a202c;
@@ -495,7 +496,8 @@ const SuggestionBox = styled(Box)`
 `;
 
 const HighlightedText = styled.div`
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   color: #1a202c;
   width: 100%;
   max-width: 800px;
@@ -578,11 +580,13 @@ const CopyButton = styled(Button)`
 `;
 
 const InputCard = styled(Box)`
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 32px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   margin-bottom: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 
   @media (max-width: 768px) {
     padding: 24px;
