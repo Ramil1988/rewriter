@@ -333,29 +333,16 @@ function RewRitter() {
 }
 
 const SloganText = styled(Heading)`
-  text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(66, 153, 225, 0.5);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
   margin-bottom: 30px;
   display: block;
-  font-size: 3.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: glow 3s ease-in-out infinite;
-  letter-spacing: -1px;
-
-  @keyframes glow {
-    0%, 100% {
-      filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.6));
-    }
-    50% {
-      filter: drop-shadow(0 0 30px rgba(118, 75, 162, 0.8));
-    }
-  }
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0px;
 
   @media (max-width: 768px) {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
 `;
 
@@ -363,27 +350,15 @@ const OuterContainer = styled.div`
   width: 100vw;
   min-height: 100vh;
   overflow-y: auto;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-image: url("./rewriter.png");
+  background-size: cover;
+  background-position: center center;
   background-attachment: fixed;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
   position: relative;
-
-  &::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("./rewriter.png");
-    background-size: cover;
-    background-position: center center;
-    opacity: 0.15;
-    z-index: 0;
-  }
 `;
 
 const AppContainer = styled.div`
@@ -396,19 +371,18 @@ const AppContainer = styled.div`
   text-align: center;
   position: relative;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  border-radius: 24px;
   padding: 40px;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: fadeInUp 0.8s ease-out;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: fadeInUp 0.6s ease-out;
 
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
@@ -440,44 +414,30 @@ const SuggestionBox = styled(Box)`
   padding: 1.5rem;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15),
-              0 0 0 1px rgba(255, 255, 255, 0.3) inset;
-  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   color: #2d3748;
   overflow: hidden;
   white-space: pre-wrap;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  transition: all 0.3s ease;
   position: relative;
-  animation: slideIn 0.5s ease-out;
+  animation: slideIn 0.4s ease-out;
 
   @keyframes slideIn {
     from {
       opacity: 0;
-      transform: translateY(20px) scale(0.95);
+      transform: translateY(15px);
     }
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
     }
   }
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
-    border-radius: 20px 20px 0 0;
-  }
-
   &:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4),
-                0 0 0 1px rgba(102, 126, 234, 0.3) inset;
-    border-color: rgba(102, 126, 234, 0.5);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   }
 
   @media (max-width: 768px) {
@@ -495,20 +455,18 @@ const HighlightedText = styled.div`
   max-width: 800px;
   margin: 2rem auto;
   padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15),
-              0 0 0 1px rgba(255, 255, 255, 0.3) inset;
-  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   overflow: hidden;
   white-space: pre-wrap;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  animation: slideIn 0.5s ease-out;
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  transition: all 0.3s ease;
+  animation: slideIn 0.4s ease-out;
 
   @keyframes slideIn {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(15px);
     }
     to {
       opacity: 1;
@@ -516,36 +474,24 @@ const HighlightedText = styled.div`
     }
   }
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #48bb78, #38a169);
-    border-radius: 20px 20px 0 0;
-  }
-
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 60px rgba(72, 187, 120, 0.3),
-                0 0 0 1px rgba(72, 187, 120, 0.2) inset;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   }
 
   .added {
-    background: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+    background-color: #c6f6d5;
     padding: 2px 4px;
-    border-radius: 4px;
+    border-radius: 3px;
     font-weight: 600;
   }
 
   .removed {
-    background: linear-gradient(120deg, #ffeaa7 0%, #fab1a0 100%);
+    background-color: #fed7d7;
     text-decoration: line-through;
     padding: 2px 4px;
-    border-radius: 4px;
-    opacity: 0.7;
+    border-radius: 3px;
+    opacity: 0.8;
   }
 
   @media (max-width: 768px) {
@@ -557,18 +503,8 @@ const HighlightedText = styled.div`
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   margin-top: 16px;
-  animation: fadeIn 0.3s ease-out 0.2s both;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
 
   @media (max-width: 768px) {
     gap: 8px;
@@ -578,10 +514,10 @@ const ButtonContainer = styled.div`
 
 const CopyButton = styled(Button)`
   align-self: flex-end;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
   }
 
   &:active {
