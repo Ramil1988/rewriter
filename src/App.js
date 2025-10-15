@@ -525,19 +525,24 @@ const HighlightedText = styled.div`
   }
 
   .added {
-    background-color: #D1FAE5;
-    color: #065F46;
-    padding: 3px 6px;
+    background-color: #90EE90;
+    color: #006400;
+    padding: 4px 8px;
     border-radius: 4px;
-    font-weight: 600;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: #006400;
+    text-decoration-thickness: 2px;
   }
 
   .removed {
-    background-color: #FEE2E2;
-    color: #991B1B;
+    background-color: #FFCCCB;
+    color: #8B0000;
     text-decoration: line-through;
-    padding: 3px 6px;
+    padding: 4px 8px;
     border-radius: 4px;
+    font-weight: 700;
+    text-decoration-thickness: 2px;
   }
 
   @media (max-width: 768px) {
