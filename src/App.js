@@ -246,15 +246,18 @@ function RewRitter() {
                     rightIcon={<FaChevronCircleDown />}
                     variant="outline"
                     bg="white"
+                    color="black"
                     _hover={{ bg: "#F9FAFB" }}
                   >
                     {numSuggestions} {numSuggestions === 1 ? 'version' : 'versions'}
                   </MenuButton>
-                  <MenuList>
+                  <MenuList bg="white">
                     {[1, 2, 3].map((number) => (
                       <MenuItem
                         key={number}
+                        color="black"
                         onClick={() => setNumSuggestions(number)}
+                        _hover={{ bg: "#F3F4F6" }}
                       >
                         {number} {number === 1 ? 'version' : 'versions'}
                       </MenuItem>
