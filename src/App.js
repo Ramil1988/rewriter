@@ -40,16 +40,32 @@ function RewRitter() {
     setErrorHighlights("");
     setHighlightedText("");
 
-    const styleInstructions = {
-      Professional: "Use business-appropriate language, clear structure, and polished vocabulary. Suitable for workplace communication.",
-      Casual: "Use relaxed, conversational language. Write like you're talking to a friend. Use contractions and informal expressions.",
-      Formal: "Use traditional, structured language. Avoid contractions. Use sophisticated vocabulary and proper grammar throughout.",
-      Friendly: "Use warm, approachable language. Be enthusiastic and personable. Show empathy and connection.",
-      Academic: "Use scholarly language, precise terminology, and objective tone. Structure like an academic paper with clear arguments.",
-      Simple: "Use ONLY simple, everyday words. Short sentences (under 15 words). No complex vocabulary. Write like you're explaining to a 12-year-old. Replace ANY difficult word with a simple one."
+    const stylePrompts = {
+      Professional: {
+        system: "You rewrite text for business settings. Use clear, polished language. Professional but not overly formal. Example: 'I would like to discuss the project timeline with you.'",
+        user: `Rewrite this for a business/professional setting. Keep it polished but approachable: "${text}"`
+      },
+      Casual: {
+        system: "You rewrite text casually, like texting a friend. Use contractions (I'm, you're, it's). Relaxed and conversational. Example: 'Hey, wanna grab coffee later?'",
+        user: `Rewrite this like you're texting a friend. Be casual and relaxed: "${text}"`
+      },
+      Formal: {
+        system: "You rewrite text in formal, traditional style. No contractions. Structured sentences. Sophisticated vocabulary. Example: 'I would be honoured to attend the ceremony.'",
+        user: `Rewrite this in a VERY formal, traditional style. No contractions. Sophisticated: "${text}"`
+      },
+      Friendly: {
+        system: "You rewrite text in a warm, friendly way. Enthusiastic and kind. Show warmth. Example: 'I'd love to help you with that! Let me know what you need!'",
+        user: `Rewrite this in a warm, friendly, enthusiastic way: "${text}"`
+      },
+      Academic: {
+        system: "You rewrite text in scholarly, academic style. Objective, precise, research-oriented. Example: 'The findings suggest a correlation between the variables examined.'",
+        user: `Rewrite this in academic, scholarly style. Objective and precise: "${text}"`
+      },
+      Simple: {
+        system: "You rewrite text using ONLY basic, simple words that a child would understand. Short sentences. No big words. Example: 'Can we make an app to help you write reports each week?'",
+        user: `Rewrite this using ONLY simple words. Pretend you're explaining to a 10-year-old. Use basic words only: "${text}"`
+      }
     };
-
-    let instruction = `Rewrite this text in a ${writingStyle} style. ${styleInstructions[writingStyle]} Text: "${text}"`;
 
     try {
       const response = await fetch(
@@ -64,11 +80,11 @@ function RewRitter() {
             messages: [
               {
                 role: "system",
-                content: `You are a writing style expert. ${styleInstructions[writingStyle]} Be extreme and clear in applying the style. Do NOT mix styles.`,
+                content: stylePrompts[writingStyle].system
               },
               {
                 role: "user",
-                content: instruction,
+                content: stylePrompts[writingStyle].user
               },
             ],
           }),
