@@ -29,6 +29,7 @@ function RewRitter() {
   );
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [recognition, setRecognition] = useState(null);
 
   const handleInputChange = (e) => {
     setText(e.target.value);
@@ -204,32 +205,55 @@ function RewRitter() {
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const recognitionInstance = new SpeechRecognition();
 
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognitionInstance.lang = 'en-US';
+    recognitionInstance.continuous = true; // Changed to continuous so it doesn't stop automatically
+    recognitionInstance.interimResults = true;
 
-    recognition.onstart = () => {
+    recognitionInstance.onstart = () => {
       setIsListening(true);
     };
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setText(text + (text ? ' ' : '') + transcript);
-      setIsListening(false);
+    recognitionInstance.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        setText(text + (text ? ' ' : '') + finalTranscript);
+      }
     };
 
-    recognition.onerror = (event) => {
+    recognitionInstance.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
+      setRecognition(null);
     };
 
-    recognition.onend = () => {
+    recognitionInstance.onend = () => {
       setIsListening(false);
+      setRecognition(null);
     };
 
-    recognition.start();
+    recognitionInstance.start();
+    setRecognition(recognitionInstance);
+  };
+
+  const stopListening = () => {
+    if (recognition) {
+      recognition.stop();
+      setIsListening(false);
+      setRecognition(null);
+    }
   };
 
   // Text-to-Speech
@@ -300,11 +324,10 @@ function RewRitter() {
                   <Button
                     size="sm"
                     colorScheme={isListening ? "red" : "purple"}
-                    onClick={startListening}
-                    isDisabled={isListening}
-                    leftIcon={<span>🎤</span>}
+                    onClick={isListening ? stopListening : startListening}
+                    leftIcon={<span>{isListening ? "⏹️" : "🎤"}</span>}
                   >
-                    {isListening ? "Listening..." : "Dictate"}
+                    {isListening ? "Stop Dictating" : "Dictate"}
                   </Button>
                   <Button
                     size="sm"
