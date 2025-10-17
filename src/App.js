@@ -249,7 +249,7 @@ function RewRitter() {
                   >
                     {writingStyle}
                   </MenuButton>
-                  <MenuList bg="white">
+                  <MenuList bg="white" zIndex={1000}>
                     {["Professional", "Casual", "Formal", "Friendly", "Academic", "Simple"].map((style) => (
                       <MenuItem
                         key={style}
@@ -586,6 +586,8 @@ const InputCard = styled(Box)`
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   margin-bottom: 32px;
   border: 1px solid rgba(255, 255, 255, 0.5);
+  position: relative;
+  z-index: 10;
 
   @media (max-width: 768px) {
     padding: 24px;
