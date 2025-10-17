@@ -27,6 +27,8 @@ function RewRitter() {
   const [copiedStatus, setCopiedStatus] = useState(
     new Array(suggestions.length).fill(false)
   );
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleInputChange = (e) => {
     setText(e.target.value);
@@ -194,6 +196,77 @@ function RewRitter() {
       .join("");
   };
 
+  // Voice Recognition (Speech-to-Text)
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setText(text + (text ? ' ' : '') + transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
+  // Text-to-Speech
+  const speakText = (textToSpeak) => {
+    if (!('speechSynthesis' in window)) {
+      alert('Text-to-speech is not supported in your browser.');
+      return;
+    }
+
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
+
 
   return (
     <ChakraProvider>
@@ -203,25 +276,47 @@ function RewRitter() {
             <SloganText>Write perfectly with AI</SloganText>
 
             <InputCard>
-              <StyledTextarea
-                value={text}
-                onChange={handleInputChange}
-                placeholder="Enter your text to check or rewrite..."
-                size="lg"
-                minH="150px"
-                resize="vertical"
-                bg="white"
-                color="#1a202c"
-                border="2px solid #E5E7EB"
-                borderRadius="12px"
-                fontSize="15px"
-                _placeholder={{ color: "#9CA3AF" }}
-                _focus={{
-                  borderColor: "#3B82F6",
-                  boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-                  outline: "none"
-                }}
-              />
+              <TextareaContainer>
+                <StyledTextarea
+                  value={text}
+                  onChange={handleInputChange}
+                  placeholder="Enter your text to check or rewrite..."
+                  size="lg"
+                  minH="150px"
+                  resize="vertical"
+                  bg="white"
+                  color="#1a202c"
+                  border="2px solid #E5E7EB"
+                  borderRadius="12px"
+                  fontSize="15px"
+                  _placeholder={{ color: "#9CA3AF" }}
+                  _focus={{
+                    borderColor: "#3B82F6",
+                    boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+                    outline: "none"
+                  }}
+                />
+                <VoiceButtonsRow>
+                  <Button
+                    size="sm"
+                    colorScheme={isListening ? "red" : "purple"}
+                    onClick={startListening}
+                    isDisabled={isListening}
+                    leftIcon={<span>🎤</span>}
+                  >
+                    {isListening ? "Listening..." : "Dictate"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    colorScheme={isSpeaking ? "red" : "teal"}
+                    onClick={() => isSpeaking ? stopSpeaking() : speakText(text)}
+                    isDisabled={!text}
+                    leftIcon={<span>{isSpeaking ? "⏹️" : "🔊"}</span>}
+                  >
+                    {isSpeaking ? "Stop" : "Listen"}
+                  </Button>
+                </VoiceButtonsRow>
+              </TextareaContainer>
 
               <ActionButtonsRow>
                 <PrimaryButton
@@ -305,6 +400,14 @@ function RewRitter() {
                         <SuggestionBox key={index}>
                           <SuggestionText>{suggestion}</SuggestionText>
                           <ButtonContainer>
+                            <Button
+                              size="sm"
+                              colorScheme="teal"
+                              onClick={() => speakText(suggestion)}
+                              leftIcon={<span>🔊</span>}
+                            >
+                              Listen
+                            </Button>
                             <CopyButton
                               onClick={() => handleCopy(suggestion, index)}
                               colorScheme="blue"
@@ -564,9 +667,25 @@ const InputCard = styled(Box)`
   }
 `;
 
+const TextareaContainer = styled.div`
+  position: relative;
+  margin-bottom: 20px;
+`;
+
 const StyledTextarea = styled(Textarea)`
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   line-height: 1.6;
+`;
+
+const VoiceButtonsRow = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  justify-content: flex-end;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 `;
 
 const ActionButtonsRow = styled(Flex)`
