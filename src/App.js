@@ -42,28 +42,28 @@ function RewRitter() {
 
     const stylePrompts = {
       Professional: {
-        system: "You rewrite text for business settings. Use clear, polished language. Professional but not overly formal. Example: 'I would like to discuss the project timeline with you.'",
-        user: `Rewrite this for a business/professional setting. Keep it polished but approachable: "${text}"`
+        system: "You are a business communications specialist. RULES: Use professional workplace language. Be polite and clear. Use complete sentences. Avoid slang. DO NOT be too formal or use complex words. DO NOT be casual or use emojis.",
+        user: `Make this sound professional for business/work communication. Keep same meaning: "${text}"`
       },
       Casual: {
-        system: "You rewrite text casually, like texting a friend. Use contractions (I'm, you're, it's). Relaxed and conversational. Example: 'Hey, wanna grab coffee later?'",
-        user: `Rewrite this like you're texting a friend. Be casual and relaxed: "${text}"`
+        system: "You are rewriting text casually. RULES: Write like texting a friend. USE contractions (don't, can't, I'm). Use short sentences. Relaxed tone. You CAN use 'hey', 'yeah', 'wanna'. DO NOT be formal. DO NOT use business language.",
+        user: `Make this super casual like texting a friend: "${text}"`
       },
       Formal: {
-        system: "You rewrite text in formal, traditional style. No contractions. Structured sentences. Sophisticated vocabulary. Example: 'I would be honoured to attend the ceremony.'",
-        user: `Rewrite this in a VERY formal, traditional style. No contractions. Sophisticated: "${text}"`
+        system: "You are a formal letter writer. RULES: VERY formal and traditional. NO contractions ever (use 'do not' not 'don't'). Use sophisticated vocabulary. Proper grammar. Structured. DO NOT be casual. DO NOT be conversational.",
+        user: `Make this VERY formal and traditional. No contractions. Sophisticated: "${text}"`
       },
       Friendly: {
-        system: "You rewrite text in a warm, friendly way. Enthusiastic and kind. Show warmth. Example: 'I'd love to help you with that! Let me know what you need!'",
-        user: `Rewrite this in a warm, friendly, enthusiastic way: "${text}"`
+        system: "You are a warm, enthusiastic person. RULES: Be friendly and warm. Show excitement. Can use exclamation marks! Be encouraging. Upbeat tone. DO NOT be formal. DO NOT be cold or distant.",
+        user: `Make this friendly, warm and enthusiastic: "${text}"`
       },
       Academic: {
-        system: "You rewrite text in scholarly, academic style. Objective, precise, research-oriented. Example: 'The findings suggest a correlation between the variables examined.'",
-        user: `Rewrite this in academic, scholarly style. Objective and precise: "${text}"`
+        system: "You are an academic researcher. RULES: Use scholarly language. Be objective and analytical. Use precise terminology. Third person perspective. Formal structure. NO emotions. NO exclamation marks. DO NOT be casual. DO NOT be enthusiastic.",
+        user: `Make this sound scholarly and academic. Objective and analytical: "${text}"`
       },
       Simple: {
-        system: "You rewrite text using ONLY basic, simple words that a child would understand. Short sentences. No big words. Example: 'Can we make an app to help you write reports each week?'",
-        user: `Rewrite this using ONLY simple words. Pretend you're explaining to a 10-year-old. Use basic words only: "${text}"`
+        system: "You explain things to 8-year-old children. RULES: ONLY use these types of words: make, help, do, get, go, want, can, like, think, know, see, say, use. Keep sentences under 8 words. BANNED WORDS: facilitate, construct, implement, collaborate, concept, envisioned, appearance, application, individuals, provide, input. If you use any complex word, you FAIL.",
+        user: `Rewrite using ONLY words an 8-year-old knows. Very short sentences. No big words: "${text}"`
       }
     };
 
@@ -77,6 +77,7 @@ function RewRitter() {
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
+            temperature: 0.3,
             messages: [
               {
                 role: "system",
