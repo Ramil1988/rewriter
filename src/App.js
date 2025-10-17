@@ -24,6 +24,7 @@ function RewRitter() {
   const [isLoading, setIsLoading] = useState(false);
   const [numSuggestions, setNumSuggestions] = useState(1);
   const [writingStyle, setWritingStyle] = useState("Professional");
+  const [lastRewrittenText, setLastRewrittenText] = useState("");
   const [highlightedText, setHighlightedText] = useState("");
   const [hasCopiedText, setHasCopiedText] = useState(false);
   const [copiedStatus, setCopiedStatus] = useState(
@@ -74,6 +75,7 @@ function RewRitter() {
       const rewrittenText = data.choices[0].message.content.trim().replace(/^"|"$/g, "");
 
       setSuggestions([rewrittenText]);
+      setLastRewrittenText(text);
       setIsLoading(false);
     } catch (error) {
       console.error(error);
@@ -197,6 +199,17 @@ function RewRitter() {
       .join("");
   };
 
+  const handleStyleChange = (newStyle) => {
+    setWritingStyle(newStyle);
+    // If there's already a rewrite visible, automatically rewrite with new style
+    if (suggestions.length > 0 && lastRewrittenText) {
+      // Small delay to let the dropdown close and show the new style
+      setTimeout(() => {
+        handleSubmit();
+      }, 100);
+    }
+  };
+
   return (
     <ChakraProvider>
       <OuterContainer>
@@ -254,7 +267,7 @@ function RewRitter() {
                       <MenuItem
                         key={style}
                         color="black"
-                        onClick={() => setWritingStyle(style)}
+                        onClick={() => handleStyleChange(style)}
                         _hover={{ bg: "#F3F4F6" }}
                         bg={writingStyle === style ? "#E5E7EB" : "white"}
                       >
