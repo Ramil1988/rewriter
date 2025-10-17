@@ -23,6 +23,7 @@ function RewRitter() {
   const [errorHighlights, setErrorHighlights] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [numSuggestions, setNumSuggestions] = useState(1);
+  const [writingStyle, setWritingStyle] = useState("Professional");
   const [highlightedText, setHighlightedText] = useState("");
   const [hasCopiedText, setHasCopiedText] = useState(false);
   const [copiedStatus, setCopiedStatus] = useState(
@@ -37,7 +38,7 @@ function RewRitter() {
     setIsLoading(true);
     setErrorHighlights("");
     setHighlightedText("");
-    let instruction = `Provide ${numSuggestions} creative alternative ways to express the following text. Each version should have a different style, tone, or structure while maintaining the same core meaning. Make them distinctly different from each other: "${text}"`;
+    let instruction = `Rewrite the following text in a ${writingStyle.toLowerCase()} style. Maintain the core meaning but adjust the tone, vocabulary, and sentence structure to match a ${writingStyle.toLowerCase()} writing style: "${text}"`;
 
     try {
       const response = await fetch(
@@ -52,7 +53,7 @@ function RewRitter() {
             messages: [
               {
                 role: "system",
-                content: "You are a creative writing assistant that provides varied rewriting suggestions with different styles and tones.",
+                content: `You are a writing assistant that rewrites text in different styles. When asked for a ${writingStyle.toLowerCase()} style, provide ONE rewritten version that clearly matches that style.`,
               },
               {
                 role: "user",
@@ -70,14 +71,9 @@ function RewRitter() {
       }
 
       const data = await response.json();
-      const rawSuggestions = data.choices[0].message.content.trim().split("\n");
-      const filteredSuggestions = rawSuggestions
-        .filter((suggestion) => suggestion.trim() !== "")
-        .map((suggestion) => {
-          return suggestion.replace(/^\d+\.\s*/, "").replace(/^"|"$/g, "");
-        });
+      const rewrittenText = data.choices[0].message.content.trim().replace(/^"|"$/g, "");
 
-      setSuggestions(filteredSuggestions.slice(0, numSuggestions));
+      setSuggestions([rewrittenText]);
       setIsLoading(false);
     } catch (error) {
       console.error(error);
@@ -237,7 +233,7 @@ function RewRitter() {
                   isDisabled={!text || isLoading}
                   leftIcon={<span>✨</span>}
                 >
-                  Rewrite Text
+                  Rewrite as
                 </PrimaryButton>
 
                 <Menu>
@@ -249,18 +245,20 @@ function RewRitter() {
                     bg="white"
                     color="black"
                     _hover={{ bg: "#F9FAFB" }}
+                    minW="150px"
                   >
-                    {numSuggestions} {numSuggestions === 1 ? 'version' : 'versions'}
+                    {writingStyle}
                   </MenuButton>
                   <MenuList bg="white">
-                    {[1, 2, 3].map((number) => (
+                    {["Professional", "Casual", "Formal", "Friendly", "Academic", "Simple"].map((style) => (
                       <MenuItem
-                        key={number}
+                        key={style}
                         color="black"
-                        onClick={() => setNumSuggestions(number)}
+                        onClick={() => setWritingStyle(style)}
                         _hover={{ bg: "#F3F4F6" }}
+                        bg={writingStyle === style ? "#E5E7EB" : "white"}
                       >
-                        {number} {number === 1 ? 'version' : 'versions'}
+                        {style}
                       </MenuItem>
                     ))}
                   </MenuList>
@@ -330,12 +328,12 @@ function RewRitter() {
                 {suggestions.length > 0 && (
                   <>
                     <ResultsHeader>
-                      {suggestions.length} {suggestions.length === 1 ? 'Suggestion' : 'Suggestions'}
+                      {writingStyle} Style Rewrite
                     </ResultsHeader>
                     <FlexWrapContainer>
                       {suggestions.map((suggestion, index) => (
                         <SuggestionBox key={index}>
-                          <SuggestionNumber>Version {index + 1}</SuggestionNumber>
+                          <SuggestionNumber>{writingStyle} Version</SuggestionNumber>
                           <SuggestionText>{suggestion}</SuggestionText>
                           <ButtonContainer>
                             <CopyButton
