@@ -40,32 +40,60 @@ function RewRitter() {
     setErrorHighlights("");
     setHighlightedText("");
 
-    const stylePrompts = {
-      Professional: {
-        system: "You are a business communications specialist. RULES: Use professional workplace language. Be polite and clear. Use complete sentences. Avoid slang. DO NOT be too formal or use complex words. DO NOT be casual or use emojis.",
-        user: `Make this sound professional for business/work communication. Keep same meaning: "${text}"`
-      },
-      Casual: {
-        system: "You are rewriting text casually. RULES: Write like texting a friend. USE contractions (don't, can't, I'm). Use short sentences. Relaxed tone. You CAN use 'hey', 'yeah', 'wanna'. DO NOT be formal. DO NOT use business language.",
-        user: `Make this super casual like texting a friend: "${text}"`
-      },
-      Formal: {
-        system: "You are a formal letter writer. RULES: VERY formal and traditional. NO contractions ever (use 'do not' not 'don't'). Use sophisticated vocabulary. Proper grammar. Structured. DO NOT be casual. DO NOT be conversational.",
-        user: `Make this VERY formal and traditional. No contractions. Sophisticated: "${text}"`
-      },
-      Friendly: {
-        system: "You are a warm, enthusiastic person. RULES: Be friendly and warm. Show excitement. Can use exclamation marks! Be encouraging. Upbeat tone. DO NOT be formal. DO NOT be cold or distant.",
-        user: `Make this friendly, warm and enthusiastic: "${text}"`
-      },
-      Academic: {
-        system: "You are an academic researcher. RULES: Use scholarly language. Be objective and analytical. Use precise terminology. Third person perspective. Formal structure. NO emotions. NO exclamation marks. DO NOT be casual. DO NOT be enthusiastic.",
-        user: `Make this sound scholarly and academic. Objective and analytical: "${text}"`
-      },
-      Simple: {
-        system: "You explain things to 8-year-old children. RULES: ONLY use these types of words: make, help, do, get, go, want, can, like, think, know, see, say, use. Keep sentences under 8 words. BANNED WORDS: facilitate, construct, implement, collaborate, concept, envisioned, appearance, application, individuals, provide, input. If you use any complex word, you FAIL.",
-        user: `Rewrite using ONLY words an 8-year-old knows. Very short sentences. No big words: "${text}"`
-      }
+    const styleExamples = {
+      Professional: [
+        { input: "Let's meet tomorrow", output: "I would like to schedule a meeting with you tomorrow." },
+        { input: "Can you send me the files?", output: "Could you please send me the files at your earliest convenience?" }
+      ],
+      Casual: [
+        { input: "I would like to meet you", output: "Hey, wanna meet up?" },
+        { input: "Please send the documents", output: "Can you send me those docs?" }
+      ],
+      Formal: [
+        { input: "Let's work together", output: "I would be honoured to collaborate with you on this endeavour." },
+        { input: "Thanks for your help", output: "I am most grateful for your valuable assistance in this matter." }
+      ],
+      Friendly: [
+        { input: "Let me know if you need help", output: "I'd love to help you out! Just let me know what you need!" },
+        { input: "See you later", output: "Looking forward to seeing you! Have a great day!" }
+      ],
+      Academic: [
+        { input: "The results show a connection", output: "The empirical findings demonstrate a statistically significant correlation between the examined variables." },
+        { input: "We need more data", output: "Further quantitative analysis is required to substantiate the preliminary conclusions." }
+      ],
+      Simple: [
+        { input: "Please provide feedback on the proposal", output: "Can you tell me what you think about this idea?" },
+        { input: "We should schedule a meeting", output: "Let's pick a time to meet." }
+      ]
     };
+
+    const examples = styleExamples[writingStyle];
+    const messages = [
+      {
+        role: "system",
+        content: `You rewrite text in ${writingStyle.toLowerCase()} style. Follow the examples EXACTLY. Match that style precisely.`
+      },
+      {
+        role: "user",
+        content: `Input: "${examples[0].input}"`
+      },
+      {
+        role: "assistant",
+        content: `Output: "${examples[0].output}"`
+      },
+      {
+        role: "user",
+        content: `Input: "${examples[1].input}"`
+      },
+      {
+        role: "assistant",
+        content: `Output: "${examples[1].output}"`
+      },
+      {
+        role: "user",
+        content: `Input: "${text}"`
+      }
+    ];
 
     try {
       const response = await fetch(
@@ -77,17 +105,8 @@ function RewRitter() {
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
-            temperature: 0.3,
-            messages: [
-              {
-                role: "system",
-                content: stylePrompts[writingStyle].system
-              },
-              {
-                role: "user",
-                content: stylePrompts[writingStyle].user
-              },
-            ],
+            temperature: 0.5,
+            messages: messages,
           }),
         }
       );
@@ -99,7 +118,12 @@ function RewRitter() {
       }
 
       const data = await response.json();
-      const rewrittenText = data.choices[0].message.content.trim().replace(/^"|"$/g, "");
+      let rewrittenText = data.choices[0].message.content.trim();
+
+      // Remove "Output: " prefix if present
+      rewrittenText = rewrittenText.replace(/^Output:\s*/i, '');
+      // Remove quotes
+      rewrittenText = rewrittenText.replace(/^"|"$/g, '');
 
       setSuggestions([rewrittenText]);
       setLastRewrittenText(text);
