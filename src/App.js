@@ -4,23 +4,17 @@ import {
   Heading,
   Button,
   Box,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   Textarea,
-  SkeletonText,
   Flex,
   Spinner,
+  Select,
 } from "@chakra-ui/react";
-import { FaChevronCircleDown } from "react-icons/fa";
 import { ChakraProvider } from "@chakra-ui/react";
 import { diffWords } from "diff";
 
 function RewRitter() {
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [errorHighlights, setErrorHighlights] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [highlightedText, setHighlightedText] = useState("");
   const [hasCopiedText, setHasCopiedText] = useState(false);
@@ -29,7 +23,26 @@ function RewRitter() {
   );
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isResultSpeaking, setIsResultSpeaking] = useState(false);
   const [recognition, setRecognition] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
+
+  const languages = [
+    { code: 'en-US', name: 'English (US)' },
+    { code: 'en-GB', name: 'English (UK)' },
+    { code: 'es-ES', name: 'Spanish (Spain)' },
+    { code: 'es-MX', name: 'Spanish (Mexico)' },
+    { code: 'fr-FR', name: 'French' },
+    { code: 'de-DE', name: 'German' },
+    { code: 'it-IT', name: 'Italian' },
+    { code: 'pt-BR', name: 'Portuguese (Brazil)' },
+    { code: 'ru-RU', name: 'Russian' },
+    { code: 'zh-CN', name: 'Chinese (Mandarin)' },
+    { code: 'ja-JP', name: 'Japanese' },
+    { code: 'ko-KR', name: 'Korean' },
+    { code: 'ar-SA', name: 'Arabic' },
+    { code: 'hi-IN', name: 'Hindi' },
+  ];
 
   const handleInputChange = (e) => {
     setText(e.target.value);
@@ -37,7 +50,6 @@ function RewRitter() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    setErrorHighlights("");
     setHighlightedText("");
 
     try {
@@ -53,7 +65,7 @@ function RewRitter() {
             messages: [
               {
                 role: "system",
-                content: "You improve and rewrite text to make it clearer and better. Keep the same meaning but make it more polished and professional."
+                content: "You improve and rewrite text to make it clearer and better. Keep the same meaning but make it more polished and professional. IMPORTANT: Always respond in the same language as the input text. Do not translate or change the language."
               },
               {
                 role: "user",
@@ -139,7 +151,6 @@ function RewRitter() {
   const clearText = () => {
     setText("");
     setSuggestions([]);
-    setErrorHighlights("");
     setHighlightedText("");
   };
 
@@ -207,7 +218,7 @@ function RewRitter() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognitionInstance = new SpeechRecognition();
 
-    recognitionInstance.lang = 'en-US';
+    recognitionInstance.lang = selectedLanguage;
     recognitionInstance.continuous = true; // Changed to continuous so it doesn't stop automatically
     recognitionInstance.interimResults = true;
 
@@ -216,20 +227,17 @@ function RewRitter() {
     };
 
     recognitionInstance.onresult = (event) => {
-      let interimTranscript = '';
       let finalTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           finalTranscript += transcript + ' ';
-        } else {
-          interimTranscript += transcript;
         }
       }
 
       if (finalTranscript) {
-        setText(text + (text ? ' ' : '') + finalTranscript);
+        setText(prevText => prevText + (prevText ? ' ' : '') + finalTranscript);
       }
     };
 
@@ -256,7 +264,7 @@ function RewRitter() {
     }
   };
 
-  // Text-to-Speech
+  // Text-to-Speech for main input text
   const speakText = (textToSpeak) => {
     if (!('speechSynthesis' in window)) {
       alert('Text-to-speech is not supported in your browser.');
@@ -267,12 +275,13 @@ function RewRitter() {
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = 'en-US';
+    utterance.lang = selectedLanguage; // Use the same language as voice input
     utterance.rate = 0.9;
     utterance.pitch = 1;
 
     utterance.onstart = () => {
       setIsSpeaking(true);
+      setIsResultSpeaking(false); // Stop result speaking if active
     };
 
     utterance.onend = () => {
@@ -286,9 +295,41 @@ function RewRitter() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // Text-to-Speech for result text (suggestions/corrections)
+  const speakResultText = (textToSpeak) => {
+    if (!('speechSynthesis' in window)) {
+      alert('Text-to-speech is not supported in your browser.');
+      return;
+    }
+
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = selectedLanguage;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => {
+      setIsResultSpeaking(true);
+      setIsSpeaking(false); // Stop main speaking if active
+    };
+
+    utterance.onend = () => {
+      setIsResultSpeaking(false);
+    };
+
+    utterance.onerror = () => {
+      setIsResultSpeaking(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+    setIsResultSpeaking(false);
   };
 
 
@@ -320,25 +361,61 @@ function RewRitter() {
                     outline: "none"
                   }}
                 />
-                <VoiceButtonsRow>
-                  <Button
-                    size="sm"
-                    colorScheme={isListening ? "red" : "purple"}
-                    onClick={isListening ? stopListening : startListening}
-                    leftIcon={<span>{isListening ? "⏹️" : "🎤"}</span>}
-                  >
-                    {isListening ? "Stop Dictating" : "Dictate"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorScheme={isSpeaking ? "red" : "teal"}
-                    onClick={() => isSpeaking ? stopSpeaking() : speakText(text)}
-                    isDisabled={!text}
-                    leftIcon={<span>{isSpeaking ? "⏹️" : "🔊"}</span>}
-                  >
-                    {isSpeaking ? "Stop" : "Listen"}
-                  </Button>
-                </VoiceButtonsRow>
+                <VoiceControlsContainer>
+                  <VoiceInputGroup>
+                    <GroupLabel>Voice Input</GroupLabel>
+                    <VoiceButtonsRow>
+                      <Select
+                        value={selectedLanguage}
+                        onChange={(e) => setSelectedLanguage(e.target.value)}
+                        size="sm"
+                        bg="white"
+                        color="#1a202c"
+                        border="2px solid #E5E7EB"
+                        borderRadius="8px"
+                        maxW="140px"
+                        fontSize="14px"
+                        _focus={{
+                          borderColor: "#3B82F6",
+                          boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+                        }}
+                      >
+                        {languages.map((lang) => (
+                          <option key={lang.code} value={lang.code}>
+                            {lang.name}
+                          </option>
+                        ))}
+                      </Select>
+                      <Button
+                        size="sm"
+                        colorScheme={isListening ? "red" : "purple"}
+                        onClick={isListening ? stopListening : startListening}
+                        leftIcon={<span>{isListening ? "⏹️" : "🎤"}</span>}
+                        minW="150px"
+                        px="20px"
+                        fontWeight="600"
+                      >
+                        {isListening ? "Stop" : "Dictate"}
+                      </Button>
+                    </VoiceButtonsRow>
+                  </VoiceInputGroup>
+
+                  <VoiceOutputGroup>
+                    <GroupLabel>Voice Output</GroupLabel>
+                    <Button
+                      size="sm"
+                      colorScheme={isSpeaking ? "red" : "teal"}
+                      onClick={() => isSpeaking ? stopSpeaking() : speakText(text)}
+                      isDisabled={!text}
+                      leftIcon={<span>{isSpeaking ? "⏹️" : "🔊"}</span>}
+                      minW="150px"
+                      px="20px"
+                      fontWeight="600"
+                    >
+                      {isSpeaking ? "Stop" : "Listen to Text"}
+                    </Button>
+                  </VoiceOutputGroup>
+                </VoiceControlsContainer>
               </TextareaContainer>
 
               <ActionButtonsRow>
@@ -396,20 +473,24 @@ function RewRitter() {
                     <ButtonContainer>
                       <Button
                         size="sm"
-                        colorScheme="teal"
+                        colorScheme={isResultSpeaking ? "red" : "teal"}
                         onClick={() => {
-                          // Extract text without HTML tags for speech
-                          const tempDiv = document.createElement("div");
-                          tempDiv.innerHTML = highlightedText;
-                          const cleanText = Array.from(tempDiv.childNodes)
-                            .filter(node => !node.classList || !node.classList.contains("removed"))
-                            .map(node => node.textContent)
-                            .join("");
-                          speakText(cleanText);
+                          if (isResultSpeaking) {
+                            stopSpeaking();
+                          } else {
+                            // Extract text without HTML tags for speech
+                            const tempDiv = document.createElement("div");
+                            tempDiv.innerHTML = highlightedText;
+                            const cleanText = Array.from(tempDiv.childNodes)
+                              .filter(node => !node.classList || !node.classList.contains("removed"))
+                              .map(node => node.textContent)
+                              .join("");
+                            speakResultText(cleanText);
+                          }
                         }}
-                        leftIcon={<span>🔊</span>}
+                        leftIcon={<span>{isResultSpeaking ? "⏹️" : "🔊"}</span>}
                       >
-                        Listen
+                        {isResultSpeaking ? "Stop" : "Listen"}
                       </Button>
                       <CopyButton
                         onClick={copyTextContent}
@@ -442,11 +523,17 @@ function RewRitter() {
                           <ButtonContainer>
                             <Button
                               size="sm"
-                              colorScheme="teal"
-                              onClick={() => speakText(suggestion)}
-                              leftIcon={<span>🔊</span>}
+                              colorScheme={isResultSpeaking ? "red" : "teal"}
+                              onClick={() => {
+                                if (isResultSpeaking) {
+                                  stopSpeaking();
+                                } else {
+                                  speakResultText(suggestion);
+                                }
+                              }}
+                              leftIcon={<span>{isResultSpeaking ? "⏹️" : "🔊"}</span>}
                             >
-                              Listen
+                              {isResultSpeaking ? "Stop" : "Listen"}
                             </Button>
                             <CopyButton
                               onClick={() => handleCopy(suggestion, index)}
@@ -717,14 +804,88 @@ const StyledTextarea = styled(Textarea)`
   line-height: 1.6;
 `;
 
-const VoiceButtonsRow = styled.div`
+const VoiceControlsContainer = styled.div`
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  justify-content: flex-end;
+  gap: 20px;
+  margin-top: 16px;
+  justify-content: space-between;
+  align-items: flex-start;
 
   @media (max-width: 768px) {
-    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+`;
+
+const VoiceInputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  @media (max-width: 768px) {
+    align-items: center;
+  }
+`;
+
+const VoiceOutputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  @media (max-width: 768px) {
+    align-items: center;
+  }
+`;
+
+const GroupLabel = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+`;
+
+const VoiceButtonsRow = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 8px;
+  }
+`;
+
+const LanguageSelector = styled(Select)`
+  max-width: 140px;
+  font-size: 14px;
+  appearance: none;
+  background-image: none;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+  }
+`;
+
+const DictateButton = styled(Button)`
+  min-width: 150px;
+  font-weight: 600;
+  padding: 0 20px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const ListenButton = styled(Button)`
+  min-width: 150px;
+  font-weight: 600;
+  padding: 0 20px;
+
+  @media (max-width: 768px) {
+    width: 100%;
   }
 `;
 
@@ -789,15 +950,6 @@ const ResultLabel = styled.div`
   font-size: 14px;
   font-weight: 700;
   color: #10B981;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-`;
-
-const SuggestionNumber = styled.div`
-  font-size: 12px;
-  font-weight: 700;
-  color: #3B82F6;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 12px;
