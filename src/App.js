@@ -39,7 +39,17 @@ function RewRitter() {
     setIsLoading(true);
     setErrorHighlights("");
     setHighlightedText("");
-    let instruction = `Rewrite the following text in a ${writingStyle.toLowerCase()} style. Maintain the core meaning but adjust the tone, vocabulary, and sentence structure to match a ${writingStyle.toLowerCase()} writing style: "${text}"`;
+
+    const styleInstructions = {
+      Professional: "Use business-appropriate language, clear structure, and polished vocabulary. Suitable for workplace communication.",
+      Casual: "Use relaxed, conversational language. Write like you're talking to a friend. Use contractions and informal expressions.",
+      Formal: "Use traditional, structured language. Avoid contractions. Use sophisticated vocabulary and proper grammar throughout.",
+      Friendly: "Use warm, approachable language. Be enthusiastic and personable. Show empathy and connection.",
+      Academic: "Use scholarly language, precise terminology, and objective tone. Structure like an academic paper with clear arguments.",
+      Simple: "Use ONLY simple, everyday words. Short sentences (under 15 words). No complex vocabulary. Write like you're explaining to a 12-year-old. Replace ANY difficult word with a simple one."
+    };
+
+    let instruction = `Rewrite this text in a ${writingStyle} style. ${styleInstructions[writingStyle]} Text: "${text}"`;
 
     try {
       const response = await fetch(
@@ -54,7 +64,7 @@ function RewRitter() {
             messages: [
               {
                 role: "system",
-                content: `You are a writing assistant that rewrites text in different styles. When asked for a ${writingStyle.toLowerCase()} style, provide ONE rewritten version that clearly matches that style.`,
+                content: `You are a writing style expert. ${styleInstructions[writingStyle]} Be extreme and clear in applying the style. Do NOT mix styles.`,
               },
               {
                 role: "user",
