@@ -22,9 +22,6 @@ function RewRitter() {
   const [suggestions, setSuggestions] = useState([]);
   const [errorHighlights, setErrorHighlights] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [numSuggestions, setNumSuggestions] = useState(1);
-  const [writingStyle, setWritingStyle] = useState("Professional");
-  const [lastRewrittenText, setLastRewrittenText] = useState("");
   const [highlightedText, setHighlightedText] = useState("");
   const [hasCopiedText, setHasCopiedText] = useState(false);
   const [copiedStatus, setCopiedStatus] = useState(
@@ -40,61 +37,6 @@ function RewRitter() {
     setErrorHighlights("");
     setHighlightedText("");
 
-    const styleExamples = {
-      Professional: [
-        { input: "Let's meet tomorrow", output: "I would like to schedule a meeting with you tomorrow." },
-        { input: "Can you send me the files?", output: "Could you please send me the files at your earliest convenience?" }
-      ],
-      Casual: [
-        { input: "I would like to meet you", output: "Hey, wanna meet up?" },
-        { input: "Please send the documents", output: "Can you send me those docs?" }
-      ],
-      Formal: [
-        { input: "Let's work together", output: "I would be honoured to collaborate with you on this endeavour." },
-        { input: "Thanks for your help", output: "I am most grateful for your valuable assistance in this matter." }
-      ],
-      Friendly: [
-        { input: "Let me know if you need help", output: "I'd love to help you out! Just let me know what you need!" },
-        { input: "See you later", output: "Looking forward to seeing you! Have a great day!" }
-      ],
-      Academic: [
-        { input: "The results show a connection", output: "The empirical findings demonstrate a statistically significant correlation between the examined variables." },
-        { input: "We need more data", output: "Further quantitative analysis is required to substantiate the preliminary conclusions." }
-      ],
-      Simple: [
-        { input: "Please provide feedback on the proposal", output: "Can you tell me what you think about this idea?" },
-        { input: "We should schedule a meeting", output: "Let's pick a time to meet." }
-      ]
-    };
-
-    const examples = styleExamples[writingStyle];
-    const messages = [
-      {
-        role: "system",
-        content: `You rewrite text in ${writingStyle.toLowerCase()} style. Follow the examples EXACTLY. Match that style precisely.`
-      },
-      {
-        role: "user",
-        content: `Input: "${examples[0].input}"`
-      },
-      {
-        role: "assistant",
-        content: `Output: "${examples[0].output}"`
-      },
-      {
-        role: "user",
-        content: `Input: "${examples[1].input}"`
-      },
-      {
-        role: "assistant",
-        content: `Output: "${examples[1].output}"`
-      },
-      {
-        role: "user",
-        content: `Input: "${text}"`
-      }
-    ];
-
     try {
       const response = await fetch(
         "/.netlify/functions/openai",
@@ -105,8 +47,16 @@ function RewRitter() {
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
-            temperature: 0.5,
-            messages: messages,
+            messages: [
+              {
+                role: "system",
+                content: "You improve and rewrite text to make it clearer and better. Keep the same meaning but make it more polished and professional."
+              },
+              {
+                role: "user",
+                content: `Improve this text: "${text}"`
+              },
+            ],
           }),
         }
       );
@@ -118,15 +68,9 @@ function RewRitter() {
       }
 
       const data = await response.json();
-      let rewrittenText = data.choices[0].message.content.trim();
-
-      // Remove "Output: " prefix if present
-      rewrittenText = rewrittenText.replace(/^Output:\s*/i, '');
-      // Remove quotes
-      rewrittenText = rewrittenText.replace(/^"|"$/g, '');
+      let rewrittenText = data.choices[0].message.content.trim().replace(/^"|"$/g, '');
 
       setSuggestions([rewrittenText]);
-      setLastRewrittenText(text);
       setIsLoading(false);
     } catch (error) {
       console.error(error);
@@ -250,16 +194,6 @@ function RewRitter() {
       .join("");
   };
 
-  const handleStyleChange = (newStyle) => {
-    setWritingStyle(newStyle);
-    // If there's already a rewrite visible, automatically rewrite with new style
-    if (suggestions.length > 0 && lastRewrittenText) {
-      // Small delay to let the dropdown close and show the new style
-      setTimeout(() => {
-        handleSubmit();
-      }, 100);
-    }
-  };
 
   return (
     <ChakraProvider>
@@ -297,36 +231,8 @@ function RewRitter() {
                   isDisabled={!text || isLoading}
                   leftIcon={<span>✨</span>}
                 >
-                  Rewrite as
+                  Improve Text
                 </PrimaryButton>
-
-                <Menu>
-                  <MenuButton
-                    as={Button}
-                    size="lg"
-                    rightIcon={<FaChevronCircleDown />}
-                    variant="outline"
-                    bg="white"
-                    color="black"
-                    _hover={{ bg: "#F9FAFB" }}
-                    minW="150px"
-                  >
-                    {writingStyle}
-                  </MenuButton>
-                  <MenuList bg="white" zIndex={1000}>
-                    {["Professional", "Casual", "Formal", "Friendly", "Academic", "Simple"].map((style) => (
-                      <MenuItem
-                        key={style}
-                        color="black"
-                        onClick={() => handleStyleChange(style)}
-                        _hover={{ bg: "#F3F4F6" }}
-                        bg={writingStyle === style ? "#E5E7EB" : "white"}
-                      >
-                        {style}
-                      </MenuItem>
-                    ))}
-                  </MenuList>
-                </Menu>
 
                 <SecondaryButton
                   colorScheme="green"
@@ -392,12 +298,11 @@ function RewRitter() {
                 {suggestions.length > 0 && (
                   <>
                     <ResultsHeader>
-                      {writingStyle} Style Rewrite
+                      Improved Text
                     </ResultsHeader>
                     <FlexWrapContainer>
                       {suggestions.map((suggestion, index) => (
                         <SuggestionBox key={index}>
-                          <SuggestionNumber>{writingStyle} Version</SuggestionNumber>
                           <SuggestionText>{suggestion}</SuggestionText>
                           <ButtonContainer>
                             <CopyButton
