@@ -82,7 +82,7 @@ function RewRitter() {
     setIsLoading(true);
     setSuggestions([]);
 
-    let instruction = `Check the following text ONLY for grammar, spelling, and punctuation errors. If there are mistakes, provide the corrected version. If there are NO mistakes, return the text exactly as is. Do NOT rephrase or change the style, ONLY fix errors: "${text}"`;
+    let instruction = `Please rewrite the following text with corrections if it has mistakes: "${text}".`;
 
     try {
       const response = await fetch(
@@ -97,7 +97,7 @@ function RewRitter() {
             messages: [
               {
                 role: "system",
-                content: "You are a grammar and spelling checker. Your job is to ONLY fix errors without changing the writing style or rephrasing. If there are no errors, return the text unchanged.",
+                content: "You are a helpful assistant.",
               },
               {
                 role: "user",
