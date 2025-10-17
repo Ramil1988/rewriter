@@ -371,6 +371,23 @@ function RewRitter() {
                       dangerouslySetInnerHTML={{ __html: highlightedText }}
                     />
                     <ButtonContainer>
+                      <Button
+                        size="sm"
+                        colorScheme="teal"
+                        onClick={() => {
+                          // Extract text without HTML tags for speech
+                          const tempDiv = document.createElement("div");
+                          tempDiv.innerHTML = highlightedText;
+                          const cleanText = Array.from(tempDiv.childNodes)
+                            .filter(node => !node.classList || !node.classList.contains("removed"))
+                            .map(node => node.textContent)
+                            .join("");
+                          speakText(cleanText);
+                        }}
+                        leftIcon={<span>🔊</span>}
+                      >
+                        Listen
+                      </Button>
                       <CopyButton
                         onClick={copyTextContent}
                         colorScheme="blue"
