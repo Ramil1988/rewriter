@@ -36,7 +36,8 @@ function RewRitter() {
   const handleSubmit = async () => {
     setIsLoading(true);
     setErrorHighlights("");
-    let instruction = `Please provide ${numSuggestions} separate suggestions for rewriting the following text: "${text}"`;
+    setHighlightedText("");
+    let instruction = `Provide ${numSuggestions} creative alternative ways to express the following text. Each version should have a different style, tone, or structure while maintaining the same core meaning. Make them distinctly different from each other: "${text}"`;
 
     try {
       const response = await fetch(
@@ -51,7 +52,7 @@ function RewRitter() {
             messages: [
               {
                 role: "system",
-                content: "You are a helpful assistant.",
+                content: "You are a creative writing assistant that provides varied rewriting suggestions with different styles and tones.",
               },
               {
                 role: "user",
@@ -88,7 +89,7 @@ function RewRitter() {
     setIsLoading(true);
     setSuggestions([]);
 
-    let instruction = `Please rewrite the following text with corrections if it has mistakes: "${text}".`;
+    let instruction = `Check the following text ONLY for grammar, spelling, and punctuation errors. If there are mistakes, provide the corrected version. If there are NO mistakes, return the text exactly as is. Do NOT rephrase or change the style, ONLY fix errors: "${text}"`;
 
     try {
       const response = await fetch(
@@ -103,7 +104,7 @@ function RewRitter() {
             messages: [
               {
                 role: "system",
-                content: "You are a helpful assistant.",
+                content: "You are a grammar and spelling checker. Your job is to ONLY fix errors without changing the writing style or rephrasing. If there are no errors, return the text unchanged.",
               },
               {
                 role: "user",
